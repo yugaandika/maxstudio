@@ -1,22 +1,123 @@
-  var LS = 'maxstudio.roblox', API = '/api/roblox/assets/v1/';
-  try { var sv = JSON.parse(localStorage.getItem(LS) || 'null'); if (sv){ ukey.value = sv.k || ''; uid.value = sv.u || ''; } } catch(e){}
-  function saveCreds(){
-    try {
-      if (urem.checked) localStorage.setItem(LS, JSON.stringify({ k: ukey.value.trim(), u: uid.value.trim() }));
-      else localStorage.removeItem(LS);
-    } catch(e){}
+  var API = '/api/roblox/assets/v1/';
+  var MSA = window.MSAuth || {
+    max: 3, list: function(){ return []; }, onChange: function(){}, info: function(){ return {}; },
+    add: function(){ return Promise.resolve({ ok: false, msg: 'Penyimpanan akun tidak tersedia.' }); },
+    remove: function(){ return Promise.resolve({ ok: false, msg: 'Penyimpanan akun tidak tersedia.' }); }
+  };
+  var sel = '', chk = null, modKey = '';
+  var ukey = $('ukey'), uid = $('uid');
+  function acEl(tag, cls, txt){ var e = document.createElement(tag); if (cls) e.className = cls; if (txt) e.textContent = txt; return e; }
+  function accs(){ return MSA.list(); }
+  function cur(){
+    var a = accs(), i;
+    if (a.length === 1) return a[0];
+    for (i = 0; i < a.length; i++) if (a[i].u === sel) return a[i];
+    return null;
   }
-  urem.addEventListener('change', saveCreds);
-  ukey.addEventListener('change', function(){ saveCreds(); checkAcct(); });
-  uid.addEventListener('change', function(){ saveCreds(); checkAcct(); });
-  $('acheck').addEventListener('click', function(){ saveCreds(); checkAcct(); });
+  function mask(k){ return '•••• ' + String(k).slice(-4); }
+  function accName(a){ return a.n || ('ID ' + a.u); }
+
+  /* foto profil (headshot) pemain, diambil lewat perantara Netlify */
+  var avc = {};
+  function avUrl(id){
+    if (!avc[id]) avc[id] = fetch('/api/roblox/thumbs/v1/users/avatar-headshot?userIds=' + id + '&size=150x150&format=Png')
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){ var d = j && j.data && j.data[0]; var u = (d && d.state === 'Completed' && d.imageUrl) || ''; if (!u) delete avc[id]; return u; })
+      .catch(function(){ delete avc[id]; return ''; });
+    return avc[id];
+  }
+  function paintAv(box, a){
+    box.textContent = a ? String(a.n || a.u).charAt(0) : '?';
+    box.dataset.u = a ? a.u : '';
+    if (!a) return;
+    avUrl(a.u).then(function(u){
+      if (!u || box.dataset.u !== a.u) return;
+      var im = new Image(); im.alt = '';
+      im.onload = function(){ if (box.dataset.u === a.u){ box.textContent = ''; box.appendChild(im); } };
+      im.src = u;
+    });
+  }
+
   function upStatus(msg, err){ ustat.textContent = msg; ustat.className = 'status' + (err ? ' err' : ''); }
-  function upReady(){ upgo.disabled = !lastBlob || upBusy; }
-  /* cek akun: introspect API key (tidak memakai kuota upload) */
+  function upReady(){ upgo.disabled = !lastBlob || upBusy || !cur(); }
   function aStatus(msg, err){ var el = $('astatus'); el.textContent = msg; el.className = 'status' + (err ? ' err' : ''); }
+  function aMsg(msg, err){ var el = $('amsg'); el.textContent = msg || ''; el.className = 'status' + (err ? ' err' : ''); }
+
+  /* daftar akun (Config) dan pemilih akun untuk upload */
+  function renderAccts(){
+    var a = accs(), max = MSA.max || 3, c, info = MSA.info ? MSA.info() : {};
+    if (sel && !a.some(function(x){ return x.u === sel; })) sel = '';
+    c = cur();
+    $('acount').textContent = a.length + '/' + max;
+    var list = $('alist'); list.textContent = '';
+    a.forEach(function(x){
+      var row = acEl('div', 'arow'), av = acEl('span', 'av'), tx = acEl('div', 'atx'), del = acEl('button', 'btn', 'Hapus');
+      paintAv(av, x);
+      tx.appendChild(acEl('b', '', accName(x)));
+      tx.appendChild(acEl('span', '', 'ID ' + x.u + ' · key ' + mask(x.k)));
+      del.type = 'button';
+      del.onclick = function(){
+        if (!confirm('Hapus akun ' + accName(x) + ' dari penyimpanan?')) return;
+        MSA.remove(x.u).then(function(r){ aMsg(r.ok ? 'Akun dihapus.' : (r.msg || 'Gagal menghapus.'), !r.ok); });
+      };
+      row.appendChild(av); row.appendChild(tx); row.appendChild(del);
+      list.appendChild(row);
+    });
+    if (!a.length) list.appendChild(acEl('p', 'note', info.loading ? 'Memuat akun...' : 'Belum ada akun tersimpan. Tambahkan di bawah.'));
+    if (info.warn) aMsg(info.warn, true);
+    $('addbox').hidden = a.length >= max;
+    $('afull').hidden = a.length < max;
+
+    var ps = $('psel'); ps.textContent = '';
+    function opt(v, t){ var o = document.createElement('option'); o.value = v; o.textContent = t; ps.appendChild(o); }
+    if (!a.length) opt('', 'Belum ada akun, tambahkan di Config akun');
+    else {
+      if (a.length > 1) opt('', 'Pilih akun...');
+      a.forEach(function(x){ opt(x.u, accName(x) + ' · ' + x.u); });
+    }
+    ps.value = c ? c.u : '';
+    ps.disabled = !a.length;
+    $('pick').classList.toggle('need', a.length > 1 && !c);
+    paintAv($('pav'), c);
+    $('pinfo').textContent = c ? 'ID ' + c.u + ' · key ' + mask(c.k) : (a.length > 1 ? 'Pilih dulu akun tujuan upload.' : '');
+    upReady();
+  }
+  $('psel').addEventListener('change', function(){ sel = this.value; renderAccts(); });
+
+  /* tambah akun: cek key dulu, baru boleh disimpan */
+  function showChip(){
+    var c = $('vchip'); c.textContent = '';
+    $('asave').disabled = !chk;
+    if (!chk){ c.hidden = true; return; }
+    var av = acEl('span', 'av'), tx = acEl('div', 'atx');
+    paintAv(av, chk);
+    tx.appendChild(acEl('b', '', accName(chk)));
+    tx.appendChild(acEl('span', '', 'ID ' + chk.u));
+    c.appendChild(av); c.appendChild(tx); c.hidden = false;
+  }
+  function invalidate(){ chk = null; showChip(); }
+  ukey.addEventListener('input', invalidate);
+  uid.addEventListener('input', invalidate);
+  ukey.addEventListener('change', function(){ checkAcct(); });
+  uid.addEventListener('change', function(){ checkAcct(); });
+  $('acheck').addEventListener('click', function(){ checkAcct(); });
+  $('asave').addEventListener('click', function(){
+    if (!chk) return;
+    var b = $('asave'), got = chk; b.disabled = true;
+    MSA.add(got).then(function(r){
+      if (!r.ok){ aStatus(r.msg || 'Gagal menyimpan.', true); b.disabled = !chk; return; }
+      if (ukey.value.trim() === got.k){ ukey.value = ''; uid.value = ''; invalidate(); }
+      aStatus(r.updated ? 'Akun diperbarui.' : 'Akun tersimpan. Pilih akun ini di bagian upload.');
+    });
+  });
+
+  /* cek akun: introspect API key (tidak memakai kuota upload) */
   var chkTok = 0;
   async function checkAcct(){
-    var key = ukey.value.trim(), tok = ++chkTok, j;
+    var key = ukey.value.trim(), tok, j;
+    if (chk && chk.k === key && chk.u === uid.value.trim()) return;
+    tok = ++chkTok;
+    chk = null; showChip();
     if (!key){ aStatus('Isi API key, akun dicek otomatis.'); return; }
     aStatus('Mengecek akun...');
     try {
@@ -25,7 +126,7 @@
       if (tok !== chkTok) return;
       if (!r.ok || !j){ aStatus('Key ditolak atau tidak bisa dipakai dari jaringan ini. Cek key dan pengaturan IP-nya.', true); return; }
     } catch(e){
-      if (tok === chkTok) aStatus('Key belum bisa dicek dari browser (CORS). Kamu tetap bisa coba langsung lewat Upload ke Roblox.');
+      if (tok === chkTok) aStatus('Key belum bisa dicek dari browser. Coba lagi, atau cek koneksi internet.', true);
       return;
     }
     if (j.enabled === false){ aStatus('Key nonaktif. Aktifkan di Creator Dashboard.', true); return; }
@@ -34,14 +135,16 @@
     var sc = (j.scopes || []).filter(function(x){ return x.name === 'asset'; })[0];
     var ops = (sc && sc.operations) || [];
     if (ops.indexOf('write') < 0){ aStatus('Key belum punya izin Assets dengan operasi Write. Tambahkan di Creator Dashboard.', true); return; }
-    if (!uid.value.trim() && owner){ uid.value = owner; saveCreds(); }
+    if (!uid.value.trim() && owner) uid.value = owner;
     var mine = uid.value.trim();
+    if (!/^\d+$/.test(mine)){ aStatus('User ID harus angka saja. Lihat di URL profilmu: roblox.com/users/ANGKA/profile.', true); return; }
     if (owner && mine !== owner){ aStatus('User ID tidak cocok. Pemilik key ini punya ID ' + owner + '. Ganti User ID-nya.', true); return; }
     var perm = ops.indexOf('read') >= 0 ? 'Read dan Write aktif.' : 'Write aktif. Tambahkan Read supaya status moderasi bisa dipantau.';
-    aStatus('Terhubung. Akun ID ' + mine + ', izin Assets ' + perm);
+    chk = { k: key, u: mine, n: '' }; showChip();
+    aStatus('Key valid. Izin Assets ' + perm + ' Klik Simpan akun.');
     try {
       var ur = await fetch('/api/roblox/cloud/v2/users/' + mine, { headers: { 'x-api-key': key } });
-      if (ur.ok){ var u = await ur.json(); if (tok === chkTok && u && u.name) aStatus('Terhubung sebagai ' + u.name + ' (ID ' + mine + '). Izin Assets ' + perm); }
+      if (ur.ok){ var u = await ur.json(); if (tok === chkTok && chk && u && u.name){ chk.n = u.name; showChip(); } }
     } catch(e){}
   }
 
@@ -76,7 +179,7 @@
   function mStatus(msg, err){ var el = $('mstatus'); el.textContent = msg; el.className = 'status' + (err ? ' err' : ''); }
   function resetMod(){ modTok++; modId = ''; $('mod').hidden = true; mStatus(''); }
   async function fetchMod(){
-    var r = await fetch(API + 'assets/' + modId, { headers: { 'x-api-key': ukey.value.trim() } });
+    var r = await fetch(API + 'assets/' + modId, { headers: { 'x-api-key': modKey } });
     var j = await r.json().catch(function(){ return {}; });
     if (!r.ok) return { err: r.status === 403 ? 'Key belum punya izin Assets Read, jadi status belum bisa dicek. Tambahkan izin Read di Creator Dashboard.' : apiMsg(r, j) };
     return { st: (j.moderationResult && j.moderationResult.moderationState) || 'Reviewing' };
@@ -102,13 +205,14 @@
 
   async function doUpload(){
     if (!lastBlob || upBusy) return;
-    var key = ukey.value.trim(), id = uid.value.trim();
-    if (!key){ upStatus('Isi API key dulu.', true); return; }
-    if (!/^\d+$/.test(id)){ upStatus('User ID harus angka saja. Lihat di URL profilmu: roblox.com/users/ANGKA/profile.', true); return; }
+    var acc = cur();
+    if (!acc){ upStatus(accs().length ? 'Pilih akun Roblox tujuan upload dulu.' : 'Tambahkan akun Roblox di Config akun dulu.', true); return; }
+    var key = acc.k, id = acc.u;
+    modKey = key;
     if (lastBlob.size > 20 * 1048576){ upStatus('File lebih dari 20 MB, Roblox akan menolak. Konversi ulang dengan kualitas Hemat.', true); return; }
-    saveCreds(); resetMod(); upBusy = true; upReady();
+    resetMod(); upBusy = true; upReady();
     try {
-      upStatus('Mengupload ke Roblox...');
+      upStatus('Mengupload ke akun ' + accName(acc) + '...');
       var fd = new FormData();
       fd.append('request', JSON.stringify({
         assetType: 'Audio',
@@ -144,7 +248,8 @@
   }
   upgo.addEventListener('click', doUpload);
 
-  if (ukey.value.trim()) checkAcct();
+  MSA.onChange(renderAccts);
+  renderAccts();
 
   render(); renderAmp(); buildWave();
 })();
