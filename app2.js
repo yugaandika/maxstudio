@@ -80,6 +80,62 @@
     render(); buildWave();
   }
 
+  /* YouTube: audio diambil lewat server kecil, langsung masuk memori browser (tidak disimpan ke perangkat) */
+  var YT_API = 'https://GANTI-DENGAN-URL-SERVER-KAMU.onrender.com';
+  var ytUrl = $('yturl'), ytGo = $('ytgo'), ytRes = $('ytres'), ytSt = $('ytstatus');
+  function ytStatus(msg, err){ ytSt.textContent = msg; ytSt.className = 'status' + (err ? ' err' : ''); }
+  function isYtLink(s){ return /^(https?:\/\/)?((www|m|music)\.)?(youtube\.com|youtu\.be)\//i.test(s); }
+  async function ytCall(path){
+    var r = await fetch(YT_API + path);
+    if (!r.ok){
+      var m = 'Server sedang bermasalah, coba lagi.';
+      try { m = (await r.json()).error || m; } catch(e){}
+      throw new Error(m);
+    }
+    return r;
+  }
+  async function ytLoad(link, title){
+    ytRes.hidden = true; ytGo.disabled = true;
+    try {
+      ytStatus('Mengambil audio dari YouTube... (pertama kali bisa sampai 30 detik)');
+      var r = await ytCall('/audio?url=' + encodeURIComponent(link));
+      var blob = await r.blob();
+      var base = (title || decodeURIComponent(r.headers.get('x-title') || '') || 'youtube').replace(/[\\\/:*?"<>|]+/g, ' ').trim().slice(0, 80) || 'youtube';
+      var ext = /webm/.test(blob.type) ? '.webm' : '.m4a';
+      ytStatus('');
+      await load(new File([blob], base + ext, { type: blob.type || 'audio/mp4' }));
+    } catch(e){
+      ytStatus(e && e.message ? e.message : 'Gagal mengambil audio.', true);
+    } finally { ytGo.disabled = false; }
+  }
+  async function ytSearch(q){
+    ytGo.disabled = true; ytRes.hidden = true;
+    try {
+      ytStatus('Mencari...');
+      var list = await (await ytCall('/search?q=' + encodeURIComponent(q))).json();
+      ytRes.textContent = '';
+      if (!list.length){ ytStatus('Tidak ada hasil.', true); return; }
+      list.forEach(function(it){
+        var b = document.createElement('button');
+        b.type = 'button'; b.className = 'btn';
+        b.textContent = it.title + (it.duration ? ' · ' + fmtTime(it.duration) : '') + (it.channel ? ' · ' + it.channel : '');
+        b.addEventListener('click', function(){ ytLoad('https://www.youtube.com/watch?v=' + it.id, it.title); });
+        ytRes.appendChild(b);
+      });
+      ytRes.hidden = false; ytStatus('Pilih lagunya:');
+    } catch(e){
+      ytStatus(e && e.message ? e.message : 'Gagal mencari.', true);
+    } finally { ytGo.disabled = false; }
+  }
+  function ytSubmit(){
+    var v = ytUrl.value.trim();
+    if (!v) return;
+    if (isYtLink(v)) ytLoad(v.indexOf('http') === 0 ? v : 'https://' + v);
+    else ytSearch(v);
+  }
+  ytGo.addEventListener('click', ytSubmit);
+  ytUrl.addEventListener('keydown', function(e){ if (e.key === 'Enter') ytSubmit(); });
+
   /* export */
   var fmtSel = $('fmt');
   fmtSel.addEventListener('change', function(){ $('qwrap').hidden = fmtSel.value !== 'ogg'; });
