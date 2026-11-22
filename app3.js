@@ -1,4 +1,4 @@
-  var LS = 'maxstudio.roblox', API = 'https://apis.roblox.com/assets/v1/';
+  var LS = 'maxstudio.roblox', API = '/api/roblox/assets/v1/';
   try { var sv = JSON.parse(localStorage.getItem(LS) || 'null'); if (sv){ ukey.value = sv.k || ''; uid.value = sv.u || ''; } } catch(e){}
   function saveCreds(){
     try {
@@ -20,7 +20,7 @@
     if (!key){ aStatus('Isi API key, akun dicek otomatis.'); return; }
     aStatus('Mengecek akun...');
     try {
-      var r = await fetch('https://apis.roblox.com/api-keys/v1/introspect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ apiKey: key }) });
+      var r = await fetch('/api/roblox/api-keys/v1/introspect', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ apiKey: key }) });
       j = await r.json().catch(function(){ return null; });
       if (tok !== chkTok) return;
       if (!r.ok || !j){ aStatus('Key ditolak atau tidak bisa dipakai dari jaringan ini. Cek key dan pengaturan IP-nya.', true); return; }
@@ -40,7 +40,7 @@
     var perm = ops.indexOf('read') >= 0 ? 'Read dan Write aktif.' : 'Write aktif. Tambahkan Read supaya status moderasi bisa dipantau.';
     aStatus('Terhubung. Akun ID ' + mine + ', izin Assets ' + perm);
     try {
-      var ur = await fetch('https://apis.roblox.com/cloud/v2/users/' + mine, { headers: { 'x-api-key': key } });
+      var ur = await fetch('/api/roblox/cloud/v2/users/' + mine, { headers: { 'x-api-key': key } });
       if (ur.ok){ var u = await ur.json(); if (tok === chkTok && u && u.name) aStatus('Terhubung sebagai ' + u.name + ' (ID ' + mine + '). Izin Assets ' + perm); }
     } catch(e){}
   }
