@@ -27,7 +27,7 @@
     paint();
   }
   function paint(){
-    if (!dim) return;
+    if (!dim || !dim.width || !dim.height) return;
     var g = wave.getContext('2d'), dpr = window.devicePixelRatio || 1;
     g.setTransform(1,0,0,1,0,0); g.clearRect(0,0,wave.width,wave.height);
     g.drawImage(dim,0,0);
