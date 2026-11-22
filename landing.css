@@ -1,0 +1,23 @@
+/* Halaman pembuka, bar pengguna, dan pengatur tampilan login */
+#landing{display:none}
+body.s-landing #landing{display:block}
+body.s-landing #app{display:none}
+body.boot #landing,body.boot #app{visibility:hidden}
+#landing{max-width:680px;margin:0 auto}
+.how{display:grid;gap:12px;margin:22px 0 0;padding:0;list-style:none}
+.how li{border:1px solid var(--line);border-radius:18px;background:#080808;padding:16px 18px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;align-items:start}
+.how .idx{grid-row:span 2}
+.how b{letter-spacing:.1em;text-transform:uppercase;font-size:.88rem}
+.how span:not(.idx){color:var(--mut);font-size:.9rem}
+.pitch{margin:18px 0 0;border:1px solid var(--acc-line);border-radius:18px;padding:16px 18px;background:#050f09;display:grid;gap:6px}
+.pitch b{color:var(--acc);letter-spacing:.1em;text-transform:uppercase;font-size:.82rem}
+.pitch p{margin:0;color:var(--mut);font-size:.9rem}
+.cta{display:grid;gap:10px;margin:22px 0 0}
+.cta .btn{width:100%;text-align:center}
+.fine{margin:14px 0 0;color:var(--dim);font-size:.78rem}
+.userbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end;font-size:.82rem;color:var(--mut)}
+.userbar:empty{display:none}
+.userbar img{width:28px;height:28px;border-radius:50%}
+.userbar .un{color:var(--fg);font-weight:600}
+.userbar .btn{min-height:34px;padding:4px 12px;font-size:.78rem}
+.userbar .sync{font:500 .72rem var(--mono);color:var(--acc)}
