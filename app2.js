@@ -81,7 +81,7 @@
   }
 
   /* YouTube: audio diambil lewat server kecil, langsung masuk memori browser (tidak disimpan ke perangkat) */
-  var YT_API = 'https://GANTI-DENGAN-URL-SERVER-KAMU.onrender.com';
+  var YT_API = 'https://maxstudio-78341.containers.snapdeploy.app';
   var ytUrl = $('yturl'), ytGo = $('ytgo'), ytRes = $('ytres'), ytSt = $('ytstatus');
   function ytStatus(msg, err){ ytSt.textContent = msg; ytSt.className = 'status' + (err ? ' err' : ''); }
   function isYtLink(s){ return /^(https?:\/\/)?((www|m|music)\.)?(youtube\.com|youtu\.be)\//i.test(s); }
