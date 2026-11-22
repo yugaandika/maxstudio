@@ -1,4 +1,4 @@
-here// Perantara kecil ke Roblox supaya tidak diblokir CORS.
+// Perantara kecil ke Roblox supaya tidak diblokir CORS.
 // API key hanya diteruskan, tidak disimpan dan tidak dicatat.
 export const config = { path: "/api/roblox/*" };
 
