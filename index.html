@@ -6,6 +6,7 @@
 <title>MAX STUDIO PLAYBACKSPEED</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="landing.css">
+<link rel="stylesheet" href="accounts.css">
 </head>
 <body class="boot">
 <section id="landing" aria-label="Pengenalan">
@@ -134,6 +135,16 @@
       <audio id="raudio" controls preload="auto"></audio>
       <p class="note" id="rnote"></p>
       <label class="field"><span class="label">Nama audio di Roblox</span><input class="num wide" id="uname" type="text" maxlength="50" autocomplete="off"></label>
+      <div class="pick" id="pick">
+        <span class="label">Upload ke akun</span>
+        <div class="pickrow">
+          <span class="av lg" id="pav" aria-hidden="true"></span>
+          <div class="pickmain">
+            <select id="psel" aria-label="Pilih akun Roblox untuk upload"></select>
+            <span class="pickinfo" id="pinfo"></span>
+          </div>
+        </div>
+      </div>
       <div class="row">
         <button class="btn" id="dl" type="button">Unduh</button>
         <button class="btn primary" id="upgo" type="button">Upload ke Roblox</button>
@@ -147,15 +158,24 @@
     </div>
 
     <div class="amp" id="acct">
-      <div class="amp-head"><span class="label">Akun Roblox (untuk upload)</span></div>
-      <div class="fields">
-        <label class="field"><span class="label">API key</span><input class="num wide" id="ukey" type="password" autocomplete="off" spellcheck="false" placeholder="Open Cloud API key"></label>
-        <label class="field"><span class="label">User ID Roblox</span><input class="num wide" id="uid" type="text" inputmode="numeric" autocomplete="off" placeholder="otomatis dari key"></label>
+      <div class="amp-head"><span class="label">Config akun Roblox</span><span class="amp-val" id="acount">0/3</span></div>
+      <div class="alist" id="alist"></div>
+      <p class="status" id="amsg" role="status" aria-live="polite"></p>
+      <div class="addbox" id="addbox">
+        <span class="label">Tambah akun</span>
+        <div class="fields">
+          <label class="field"><span class="label">API key</span><input class="num wide" id="ukey" type="password" autocomplete="off" spellcheck="false" placeholder="Open Cloud API key"></label>
+          <label class="field"><span class="label">User ID Roblox</span><input class="num wide" id="uid" type="text" inputmode="numeric" autocomplete="off" placeholder="otomatis dari key"></label>
+        </div>
+        <div class="vchip" id="vchip" hidden></div>
+        <div class="row">
+          <button class="btn" id="acheck" type="button">Cek akun</button>
+          <button class="btn primary" id="asave" type="button" disabled>Simpan akun</button>
+        </div>
+        <p class="status" id="astatus" role="status" aria-live="polite">Isi API key, akun dicek otomatis.</p>
+        <p class="note">Buat key di Creator Dashboard, menu Open Cloud, API Keys. Pilih Assets, operasi Read dan Write. Untuk alamat IP, isi 0.0.0.0/0 (semua IP) atau biarkan Restrict IP mati. Key hanya dikirim ke Roblox. Satu akun Discord bisa menyimpan sampai 3 akun Roblox.</p>
       </div>
-      <label class="loop"><input type="checkbox" id="uremember" checked> Ingat key dan ID (di akun Discord kalau login, kalau tidak di perangkat ini)</label>
-      <div class="row"><button class="btn" id="acheck" type="button">Cek akun</button></div>
-      <p class="status" id="astatus" role="status" aria-live="polite">Isi API key, akun dicek otomatis.</p>
-      <p class="note">Buat key di Creator Dashboard, menu Open Cloud, API Keys. Pilih Assets, operasi Read dan Write. Untuk alamat IP, isi 0.0.0.0/0 (semua IP) atau biarkan Restrict IP mati. Key hanya dikirim ke Roblox.</p>
+      <p class="note" id="afull" hidden>Sudah 3 akun tersimpan. Hapus salah satu kalau mau menambah yang lain.</p>
     </div>
   </section>
 
