@@ -1,13 +1,45 @@
-// Perantara kecil ke Roblox Open Cloud supaya tidak diblokir CORS.
+here// Perantara kecil ke Roblox supaya tidak diblokir CORS.
 // API key hanya diteruskan, tidak disimpan dan tidak dicatat.
 export const config = { path: "/api/roblox/*" };
 
 const ALLOWED = ["assets/v1/", "api-keys/v1/introspect", "cloud/v2/users/"];
+// Foto profil (headshot) pemain, dipakai untuk avatar akun.
+const THUMB = "thumbs/v1/users/avatar-headshot";
+const THUMB_IDS = /^\d{1,20}(,\d{1,20}){0,9}$/;
 
 export default async (req) => {
   const url = new URL(req.url);
   const rest = url.pathname.replace(/^\/api\/roblox\//, "");
-  if (!ALLOWED.some((p) => rest.startsWith(p)) || rest.includes("..")) {
+  if (rest.includes("..")) return new Response("Tidak diizinkan", { status: 403 });
+
+  if (rest === THUMB) {
+    if (req.method !== "GET" || !THUMB_IDS.test(url.searchParams.get("userIds") || "")) {
+      return new Response("Tidak diizinkan", { status: 403 });
+    }
+    const q = new URLSearchParams({
+      userIds: url.searchParams.get("userIds"),
+      size: "150x150",
+      format: "Png",
+      isCircular: "false",
+    });
+    try {
+      const up = await fetch("https://thumbnails.roblox.com/v1/users/avatar-headshot?" + q);
+      return new Response(up.body, {
+        status: up.status,
+        headers: {
+          "content-type": up.headers.get("content-type") || "application/json",
+          "cache-control": "public, max-age=600",
+        },
+      });
+    } catch (e) {
+      return new Response(JSON.stringify({ message: "Gagal menghubungi Roblox" }), {
+        status: 502,
+        headers: { "content-type": "application/json" },
+      });
+    }
+  }
+
+  if (!ALLOWED.some((p) => rest.startsWith(p))) {
     return new Response("Tidak diizinkan", { status: 403 });
   }
   const headers = {};
