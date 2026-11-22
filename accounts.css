@@ -1,0 +1,20 @@
+/* Config akun Roblox: avatar, daftar akun (maks 3), dan pemilih akun upload */
+.av{--s:40px;width:var(--s);height:var(--s);flex:none;border-radius:50%;background:#141414;border:1px solid var(--line);overflow:hidden;display:grid;place-items:center;font:700 .95rem var(--sans);color:var(--mut);text-transform:uppercase}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+.av.lg{--s:52px;font-size:1.1rem}
+
+.pick{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:14px}
+.pickrow{display:flex;align-items:center;gap:12px;min-width:0}
+.pickmain{display:grid;gap:5px;flex:1;min-width:0}
+.pickinfo{font:500 .76rem var(--mono);color:var(--mut);overflow-wrap:anywhere}
+.pick.need select{border-color:var(--fg);box-shadow:0 0 0 3px rgba(255,255,255,.14)}
+.pick.need .pickinfo{color:var(--fg)}
+
+.alist{display:grid;gap:8px}
+.arow,.vchip{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:14px;padding:10px 12px;min-width:0}
+.vchip{border-color:var(--acc-line);background:#050f09}
+.atx{display:grid;gap:1px;flex:1;min-width:0}
+.atx b{font-weight:600;overflow-wrap:anywhere}
+.atx span{font:500 .76rem var(--mono);color:var(--mut);overflow-wrap:anywhere}
+.arow .btn{min-height:34px;padding:4px 12px;font-size:.78rem}
+.addbox{display:grid;gap:10px;border-top:1px solid var(--line);padding-top:12px}
