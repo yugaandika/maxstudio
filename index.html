@@ -4,32 +4,159 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>MAX STUDIO PLAYBACKSPEED</title>
-<style>
-:root{
-  color-scheme:dark;
-  --bg:#000; --fg:#fff; --mut:#9b9b9b; --dim:#6a6a6a; --line:#2e2e2e; --acc:#3ddc84; --acc-line:#1f5a3a;
-  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
-  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-}
-*{box-sizing:border-box}
-[hidden]{display:none!important}
-html{background:var(--bg)}
-body{
-  margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 var(--sans);
-  padding-top:max(28px,env(safe-area-inset-top,0px));
-  padding-bottom:max(56px,env(safe-area-inset-bottom,0px));
-  padding-left:max(16px,env(safe-area-inset-left,0px));
-  padding-right:max(16px,env(safe-area-inset-right,0px));
-}
-main{max-width:680px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
-.brand{font-weight:900;font-size:clamp(2.3rem,9vw,3.4rem);line-height:1;letter-spacing:.01em}
-h1{margin:10px 0 0;font:500 .8rem var(--mono);letter-spacing:.34em;color:var(--mut);display:flex;align-items:center;gap:12px}
-h1::after{content:"";flex:1;height:1px;background:var(--line)}
-.lede{margin:14px 0 0;color:var(--mut);max-width:58ch}
-.step{grid-template-columns:minmax(0,1fr);border:1px solid var(--line);border-radius:18px;background:#080808;padding:18px;display:grid;gap:14px;min-width:0}
-.step-head{display:flex;align-items:center;gap:12px}
-.step-head h2{margin:0;font-size:.95rem;letter-spacing:.14em;text-transform:uppercase}
-.idx{font:500 .78rem var(--mono);border:1px solid var(--fg);border-radius:8px;width:26px;height:26px;display:grid;place-items:center;flex:none}
-.label{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:600}
-.drop{display:grid;gap:4px;border:1px dashed var(--dim);border-radius:14px;padding:22px 16px;transition:border-color .15s,background .15s;cursor:pointer;text-align:center}
-.drop:hover,.drop.over,.drop:focus-within{border-color:var(--fg);background:#0d0d0d}￼Enter
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+  <header>
+    <div class="brand">MAX STUDIO<span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+    <h1>PLAYBACKSPEED</h1>
+    <p class="lede">Ubah kecepatan musik milikmu, ekspor ke OGG, lalu pasang PlaybackSpeed kebalikannya di Roblox supaya suaranya kembali normal.</p>
+  </header>
+
+  <section class="step" id="s1" aria-labelledby="h-file">
+    <div class="step-head"><span class="idx">1</span><h2 id="h-file">File musik</h2></div>
+    <label class="drop" id="drop" for="file">
+      <strong id="drop-title">PILIH ATAU SERET FILE</strong>
+      <span>mp3, ogg, wav, m4a</span>
+      <input id="file" type="file" accept="audio/*,.ogg,.mp3,.wav,.m4a">
+    </label>
+    <div class="info" id="info" hidden>
+      <span>Nama <b id="i-name"></b></span>
+      <span>Durasi <b id="i-dur"></b></span>
+      <span>Kanal <b id="i-ch"></b></span>
+      <span>Sample rate <b id="i-sr"></b></span>
+    </div>
+  </section>
+
+  <section class="step" id="s2" aria-labelledby="h-speed">
+    <div class="step-head"><span class="idx">2</span><h2 id="h-speed">Kecepatan</h2></div>
+
+    <div class="readout">
+      <div class="cell">
+        <span class="label">Speed file</span>
+        <span class="big" id="sv">2×</span>
+        <span class="sub">Durasi baru <b id="newdur" style="color:var(--fg)">-</b></span>
+      </div>
+      <div class="cell rbx">
+        <span class="label">PlaybackSpeed Roblox</span>
+        <span class="big" id="rv">0.5</span>
+        <span class="sub" id="check"></span>
+      </div>
+    </div>
+
+    <div>
+      <label class="label" for="slider">Atur speed file</label>
+      <input class="slider" id="slider" type="range" min="0.25" max="4" step="0.01" value="2">
+    </div>
+    <div class="row" id="chips" role="group" aria-label="Preset speed"></div>
+    <div class="row">
+      <label class="label" for="num">Angka tepat</label>
+      <input class="num" id="num" type="number" min="0.25" max="4" step="0.01" value="2" inputmode="decimal">
+    </div>
+
+    <div class="amp">
+      <div class="amp-head">
+        <label class="label" for="aslider">Amplify (volume)</label>
+        <span class="amp-val"><b id="av">1×</b> · <span id="adb">0.0 dB</span></span>
+      </div>
+      <input class="slider" id="aslider" type="range" min="0.1" max="4" step="0.01" value="1">
+      <div class="row" id="achips" role="group" aria-label="Preset amplify"></div>
+      <div class="row">
+        <label class="label" for="anum">Angka tepat</label>
+        <input class="num" id="anum" type="number" min="0.1" max="4" step="0.01" value="1" inputmode="decimal">
+        <label class="loop"><input type="checkbox" id="limit" checked> Cegah suara pecah</label>
+      </div>
+      <label class="loop"><input type="checkbox" id="auto" checked> Otomatis ikut speed <span class="amp-val" id="ainfo"></span></label>
+      <p class="note">Saat otomatis aktif, Amplify dihitung ulang tiap speed berubah supaya suara setelah dibalik di Roblox mendekati aslinya. Kamu tetap bisa geser manual: tambahannya ikut terbawa saat speed digeser. Volume ikut tersimpan di file, jadi di Roblox Volume tetap 1.</p>
+    </div>
+
+    <div class="stack">
+      <span class="label">Script di Roblox</span>
+      <div class="codewrap">
+        <pre id="code" tabindex="0">sound.PlaybackSpeed = 0.5</pre>
+        <button class="btn" id="copy" type="button">SALIN</button>
+      </div>
+      <p class="note">Di Roblox, PlaybackSpeed ikut mengubah nada. Karena itu file di sini juga diubah dengan nada ikut berubah, supaya kebalikannya pas.</p>
+    </div>
+
+    <div class="stack">
+      <span class="label">Dengarkan hasilnya</span>
+      <canvas class="wave" id="wave" aria-label="Gelombang audio, ketuk untuk pindah posisi"></canvas>
+      <audio id="audio" controls preload="auto"></audio>
+      <label class="loop"><input type="checkbox" id="loop"> Ulangi terus</label>
+    </div>
+  </section>
+
+  <section class="step" id="s3" aria-labelledby="h-export">
+    <div class="step-head"><span class="idx">3</span><h2 id="h-export">Ekspor</h2></div>
+    <div class="fields">
+      <label class="field"><span class="label">Format</span>
+        <select id="fmt">
+          <option value="ogg" selected>OGG (Roblox)</option>
+          <option value="wav">WAV (cadangan)</option>
+        </select>
+      </label>
+      <label class="field" id="qwrap"><span class="label">Kualitas OGG</span>
+        <select id="q">
+          <option value="3">Hemat (kecil)</option>
+          <option value="5" selected>Standar</option>
+          <option value="7">Tinggi</option>
+        </select>
+      </label>
+    </div>
+    <label class="loop"><input type="checkbox" id="trim" checked> Potong otomatis kalau lebih dari 7 menit (batas Roblox, ada fade out)</label>
+    <div class="row"><button class="btn primary" id="go" type="button" disabled>Konversi</button></div>
+    <progress id="prog" max="1" value="0" hidden></progress>
+    <p class="status" id="status" role="status" aria-live="polite">Pilih file musik dulu di langkah 1.</p>
+    <div class="amp" id="res" hidden>
+      <div class="amp-head"><span class="label">Hasil konversi</span><span class="amp-val" id="upfile"></span></div>
+      <audio id="raudio" controls preload="auto"></audio>
+      <p class="note" id="rnote"></p>
+      <label class="field"><span class="label">Nama audio di Roblox</span><input class="num wide" id="uname" type="text" maxlength="50" autocomplete="off"></label>
+      <div class="row">
+        <button class="btn" id="dl" type="button">Unduh</button>
+        <button class="btn primary" id="upgo" type="button">Upload ke Roblox</button>
+      </div>
+      <p class="status" id="ustatus" role="status" aria-live="polite"></p>
+      <div class="stack" id="mod" hidden>
+        <span class="label">Status moderasi</span>
+        <p class="status" id="mstatus" role="status" aria-live="polite"></p>
+        <div class="row"><button class="btn" id="mcheck" type="button">Cek status</button></div>
+      </div>
+    </div>
+
+    <div class="amp" id="acct">
+      <div class="amp-head"><span class="label">Akun Roblox (untuk upload)</span></div>
+      <div class="fields">
+        <label class="field"><span class="label">API key</span><input class="num wide" id="ukey" type="password" autocomplete="off" spellcheck="false" placeholder="Open Cloud API key"></label>
+        <label class="field"><span class="label">User ID Roblox</span><input class="num wide" id="uid" type="text" inputmode="numeric" autocomplete="off" placeholder="otomatis dari key"></label>
+      </div>
+      <label class="loop"><input type="checkbox" id="uremember" checked> Ingat key dan ID di perangkat ini</label>
+      <div class="row"><button class="btn" id="acheck" type="button">Cek akun</button></div>
+      <p class="status" id="astatus" role="status" aria-live="polite">Isi API key, akun dicek otomatis.</p>
+      <p class="note">Buat key di Creator Dashboard, menu Open Cloud, API Keys. Pilih Assets, operasi Read dan Write. Untuk alamat IP, isi 0.0.0.0/0 (semua IP) atau biarkan Restrict IP mati. Key hanya dikirim ke Roblox.</p>
+    </div>
+  </section>
+
+  <p class="foot">Semua diproses di perangkatmu, tidak ada yang diupload. Pakai untuk musik milikmu atau yang berlisensi.</p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/wasm-media-encoders@0.7.0/dist/umd/WasmMediaEncoder.min.js"></script>
+<script>
+/* Encoder OGG dimuat dari CDN (versi 0.7.0), tetap diproses di perangkatmu. Kalau gagal dimuat, pakai format WAV. */
+window.__createOggEncoder = function(){
+  if (!window.WasmMediaEncoder) throw new Error('no-encoder');
+  return WasmMediaEncoder.createEncoder('audio/ogg', 'https://cdn.jsdelivr.net/npm/wasm-media-encoders@0.7.0/wasm/ogg.wasm');
+};
+</script>
+<script>
+(function(){
+  var f = ['app1.js','app2.js','app3.js'];
+  Promise.all(f.map(function(u){ return fetch(u).then(function(r){ if(!r.ok) throw new Error(u); return r.text(); }); }))
+  .then(function(t){ var s = document.createElement('script'); s.text = t.join('\n'); document.body.appendChild(s); })
+  .catch(function(e){ document.body.insertAdjacentHTML('afterbegin','<p style="color:#fff;padding:16px">Gagal memuat file: '+e.message+'</p>'); });
+})();
+</script>
+</body>
+</html>
