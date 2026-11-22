@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>MAX STUDIO PLAYBACKSPEED</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#000; --fg:#fff; --mut:#9b9b9b; --dim:#6a6a6a; --line:#2e2e2e; --acc:#3ddc84; --acc-line:#1f5a3a;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--bg)}
+body{
+  margin:0;background:var(--bg);color:var(--fg);font:15px/1.55 var(--sans);
+  padding-top:max(28px,env(safe-area-inset-top,0px));
+  padding-bottom:max(56px,env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+main{max-width:680px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.brand{font-weight:900;font-size:clamp(2.3rem,9vw,3.4rem);line-height:1;letter-spacing:.01em}
+h1{margin:10px 0 0;font:500 .8rem var(--mono);letter-spacing:.34em;color:var(--mut);display:flex;align-items:center;gap:12px}
+h1::after{content:"";flex:1;height:1px;background:var(--line)}
+.lede{margin:14px 0 0;color:var(--mut);max-width:58ch}
+.step{grid-template-columns:minmax(0,1fr);border:1px solid var(--line);border-radius:18px;background:#080808;padding:18px;display:grid;gap:14px;min-width:0}
+.step-head{display:flex;align-items:center;gap:12px}
+.step-head h2{margin:0;font-size:.95rem;letter-spacing:.14em;text-transform:uppercase}
+.idx{font:500 .78rem var(--mono);border:1px solid var(--fg);border-radius:8px;width:26px;height:26px;display:grid;place-items:center;flex:none}
+.label{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);font-weight:600}
+.drop{display:grid;gap:4px;border:1px dashed var(--dim);border-radius:14px;padding:22px 16px;transition:border-color .15s,background .15s;cursor:pointer;text-align:center}
+.drop:hover,.drop.over,.drop:focus-within{border-color:var(--fg);background:#0d0d0d}￼Enter
