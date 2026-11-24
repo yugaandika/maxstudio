@@ -250,7 +250,7 @@
         upStatus('Masih diproses Roblox. Sudah masuk Riwayat upload, ID muncul otomatis nanti. Kamu boleh lanjut lagu berikutnya.');
       } else upStatus('Masih diproses Roblox. Cek di Creator Dashboard, Development Items, Audio.');
     } catch(e){
-      upStatus('Terblokir browser (CORS) atau internet putus. Coba sekali lagi. Kalau tetap gagal, upload manual lewat Creator Dashboard.', true);
+      upStatus('Upload gagal: ' + ((e && e.message) || String(e)) + '. Coba sekali lagi. Kalau tetap gagal, upload manual lewat Creator Dashboard.', true);
     } finally {
       upBusy = false; upReady();
     }
