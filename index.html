@@ -16,7 +16,7 @@
     <p class="lede">Ubah kecepatan musik milikmu, ekspor ke OGG, lalu pasang PlaybackSpeed kebalikannya di Roblox supaya suaranya kembali normal.</p>
   </header>
   <ol class="how">
-    <li><span class="idx">1</span><b>Pilih musik</b><span>mp3, ogg, wav, atau m4a dari perangkatmu, atau ambil langsung dari YouTube lewat link atau judul lagu.</span></li>
+    <li><span class="idx">1</span><b>Pilih musik</b><span>mp3, ogg, wav, atau m4a dari perangkatmu.</span></li>
     <li><span class="idx">2</span><b>Atur kecepatan</b><span>Nilai PlaybackSpeed untuk Roblox dihitung otomatis, lengkap dengan Amplify dan pratinjau.</span></li>
     <li><span class="idx">3</span><b>Ekspor atau upload</b><span>Simpan sebagai OGG atau WAV, atau langsung upload ke Roblox.</span></li>
   </ol>
@@ -42,7 +42,8 @@
       <span>mp3, ogg, wav, m4a</span>
       <input id="file" type="file" accept="audio/*,.ogg,.mp3,.wav,.m4a">
     </label>
-    <div class="stack" id="yt">
+    <!-- Bagian YouTube disembunyikan. Untuk menampilkannya lagi, hapus: style="display:none" -->
+    <div class="stack" id="yt" style="display:none">
       <span class="label">Atau ambil dari YouTube (tanpa download ke perangkat)</span>
       <div class="row">
         <input class="num wide" id="yturl" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="Tempel link YouTube atau ketik judul lagu">
@@ -188,7 +189,7 @@
     </div>
   </section>
 
-  <p class="foot">Audio diproses di perangkatmu. Untuk YouTube, link atau judul dikirim ke server kecil untuk mengambil audionya (tidak disimpan). Pakai untuk musik milikmu atau yang berlisensi.</p>
+  <p class="foot">Audio diproses di perangkatmu. Pakai untuk musik milikmu atau yang berlisensi.</p>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/wasm-media-encoders@0.7.0/dist/umd/WasmMediaEncoder.min.js"></script>
