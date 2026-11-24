@@ -9,7 +9,7 @@ const PORT = Number(process.env.PORT || 10000);
 // Bisa diubah lewat environment variable ALLOWED_ORIGIN di SnapDeploy.
 const ORIGINS = (
   process.env.ALLOWED_ORIGIN ||
-  "https://maxstudio-ym3g.netlify.app,https://maxstudio-cn9.pages.dev"
+  "https://maxstudio-cn9.pages.dev"
 ).split(",").map((s) => s.trim()).filter(Boolean);
 const MAX_SEC = Number(process.env.MAX_SEC || 900);
 const MAX_JOBS = 2;
