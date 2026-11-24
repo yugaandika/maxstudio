@@ -12,7 +12,9 @@ const ORIGINS = (
   "https://maxstudio-cn9.pages.dev"
 ).split(",").map((s) => s.trim()).filter(Boolean);
 const MAX_SEC = Number(process.env.MAX_SEC || 900);
-const MAX_JOBS = 2;
+const MAX_JOBS = 1; // server gratis kecil: satu lagu sekali jalan
+const FIRST_BYTE_MS = 120000; // kalau 2 menit belum ada data, menyerah
+const TOTAL_MS = 240000;
 const HOSTS = ["youtube.com", "www.youtube.com", "m.youtube.com", "music.youtube.com", "youtu.be"];
 
 // Opsional: cookies YouTube (Render > Secret Files > cookies.txt) kalau YouTube menolak server.
@@ -81,30 +83,52 @@ const server = http.createServer(async (req, res) => {
     } catch (e) { return send(res, 502, { error: friendly(e) }); }
   }
 
+  if (u.pathname === "/info") {
+    const link = u.searchParams.get("url") || "";
+    if (!okUrl(link)) return send(res, 400, { error: "Link harus dari YouTube." });
+    try {
+      const r = await fetch("https://www.youtube.com/oembed?format=json&url=" + encodeURIComponent(link), { signal: AbortSignal.timeout(8000) });
+      if (!r.ok) return send(res, 404, { error: "Video tidak ditemukan atau tidak bisa diakses." });
+      const j = await r.json();
+      return send(res, 200, { title: j.title || "", channel: j.author_name || "" });
+    } catch (e) { return send(res, 502, { error: "Gagal membaca info video." }); }
+  }
+
   if (u.pathname === "/audio") {
     const link = u.searchParams.get("url") || "";
     if (!okUrl(link)) return send(res, 400, { error: "Link harus dari YouTube." });
     if (jobs >= MAX_JOBS) return send(res, 429, { error: "Server sedang sibuk, coba lagi sebentar." });
     jobs++;
-    let child = null;
-    let finished = false;
+    const t0 = Date.now();
+    let finished = false, started = false, timedOut = false, bytes = 0, err = "";
     const done = () => { if (!finished) { finished = true; jobs--; } };
-    try {
-      const info = JSON.parse(await run([...BASE, "-f", FORMAT, "--dump-single-json", "--", link]));
-      if (info.is_live) { done(); return send(res, 400, { error: "Live stream tidak didukung." }); }
-      if (info.duration > MAX_SEC) { done(); return send(res, 400, { error: "Lagu terlalu panjang (maks " + Math.round(MAX_SEC / 60) + " menit)." }); }
-      const type = info.ext === "webm" ? "audio/webm" : "audio/mp4";
-      res.writeHead(200, { "content-type": type, "x-title": encodeURIComponent(info.title || "youtube") });
-      child = spawn("yt-dlp", [...BASE, "-f", FORMAT, "-o", "-", "--", link]);
-      const kill = setTimeout(() => child.kill("SIGKILL"), 240000);
-      child.stdout.pipe(res);
-      child.on("close", () => { clearTimeout(kill); done(); res.end(); });
-      res.on("close", () => child.kill("SIGKILL"));
-    } catch (e) {
-      done();
-      if (!res.headersSent) return send(res, 502, { error: friendly(e) });
-      res.end();
-    }
+    console.log("[audio] mulai " + link);
+    // Satu kali jalan saja (hemat CPU): filter live/durasi dicek langsung oleh yt-dlp.
+    const child = spawn("yt-dlp", [...BASE, "--match-filters", "!is_live & duration<=?" + MAX_SEC, "-f", FORMAT, "-o", "-", "--", link]);
+    child.stderr.on("data", (d) => { err = (err + d).slice(-600); });
+    const first = setTimeout(() => { if (!started) { timedOut = true; child.kill("SIGKILL"); } }, FIRST_BYTE_MS);
+    const kill = setTimeout(() => { timedOut = true; child.kill("SIGKILL"); }, TOTAL_MS);
+    child.stdout.on("data", (chunk) => {
+      if (!started) {
+        started = true; clearTimeout(first);
+        const webm = chunk[0] === 0x1a && chunk[1] === 0x45 && chunk[2] === 0xdf && chunk[3] === 0xa3;
+        res.writeHead(200, { "content-type": webm ? "audio/webm" : "audio/mp4", "cache-control": "no-store" });
+        console.log("[audio] data pertama setelah " + Math.round((Date.now() - t0) / 1000) + " dtk");
+      }
+      bytes += chunk.length;
+      if (!res.write(chunk)) { child.stdout.pause(); res.once("drain", () => child.stdout.resume()); }
+    });
+    child.on("close", (code) => {
+      clearTimeout(first); clearTimeout(kill); done();
+      console.log("[audio] selesai kode=" + code + " byte=" + bytes + " waktu=" + Math.round((Date.now() - t0) / 1000) + " dtk" + (code ? " err=" + err.slice(-200).replace(/\s+/g, " ") : ""));
+      if (started) return res.end();
+      if (res.headersSent) return res.end();
+      if (timedOut) return send(res, 504, { error: "Terlalu lama diproses server, coba lagi." });
+      if (/does not pass filter/i.test(err)) return send(res, 400, { error: "Live stream tidak didukung, atau lagu lebih panjang dari " + Math.round(MAX_SEC / 60) + " menit." });
+      return send(res, 502, { error: friendly(new Error(err)) });
+    });
+    child.on("error", () => { done(); if (!res.headersSent) send(res, 502, { error: "Gagal menjalankan pengunduh." }); });
+    res.on("close", () => child.kill("SIGKILL"));
     return;
   }
 
