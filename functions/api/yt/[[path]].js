@@ -1,8 +1,8 @@
 // Perantara kecil ke server YouTube (SnapDeploy) supaya browser tidak kena masalah CORS.
-// Melayani /api/yt/health, /api/yt/search, /api/yt/audio. Tidak menyimpan apa pun.
+// Melayani /api/yt/health, /search, /audio, /info. Tidak menyimpan apa pun.
 
 const TARGET = "https://maxstudio-78341.containers.snapdeploy.app";
-const ALLOWED = ["/health", "/search", "/audio"];
+const ALLOWED = ["/health", "/search", "/audio", "/info"];
 
 function json(status, obj) {
   return new Response(JSON.stringify(obj), {
