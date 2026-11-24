@@ -9,4 +9,4 @@
 
 Kalau YouTube menolak server (muncul pesan "dianggap bot"): ekspor cookies.txt dari browser,
 lalu di Render > Environment > Secret Files, buat file `cookies.txt` (path /etc/secrets/cookies.txt).
-Server gratis Render tidur kalau lama tidak dipakai, jadi permintaan pertama bisa sampai 30 detik.
+Server gratis Render tidur kalau lama tidak dipakai, jadi permintaan pertama bisa sampai 30 detik...
