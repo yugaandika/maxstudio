@@ -1,0 +1,109 @@
+/* Tema terang. Tema gelap adalah bawaan (style.css); file ini hanya aktif saat <html data-theme="light">. Dimuat paling akhir. */
+:root{color-scheme:dark}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f4f6f4; --fg:#0b100d; --mut:#4f5a53; --dim:#6f7b74; --line:#cfd8d2;
+  --acc:#12a150; --acc-line:#9fd4b6; --acc-text:#0b7a43;
+  background:#f4f6f4;
+  scrollbar-color:#9fd4b6 #e8eee9;
+}
+
+/* tombol tema di bar atas */
+#themebtn{display:inline-flex;align-items:center;gap:6px}
+#themebtn svg{flex:none}
+
+/* latar dan judul */
+:root[data-theme="light"] body{
+  background:
+    radial-gradient(900px 420px at 50% -140px, rgba(18,161,80,.14), transparent 70%),
+    radial-gradient(rgba(0,0,0,.05) 1px, transparent 1.3px) 0 0/22px 22px,
+    #f4f6f4;
+}
+:root[data-theme="light"] .brand{
+  background:linear-gradient(180deg,#0b100d 30%,#12a150);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 16px rgba(18,161,80,.2));
+}
+:root[data-theme="light"] h1{color:var(--acc-text)}
+:root[data-theme="light"] .lede{color:#4f5a53}
+:root[data-theme="light"] ::selection{background:rgba(18,161,80,.25);color:#0b100d}
+:root[data-theme="light"] .tags li{color:var(--acc-text);background:rgba(18,161,80,.08)}
+:root[data-theme="light"] .tags li::before{box-shadow:0 0 6px rgba(18,161,80,.6)}
+
+/* kartu langkah */
+:root[data-theme="light"] .step{
+  background:
+    linear-gradient(180deg,#ffffff,#f5faf7) padding-box,
+    linear-gradient(160deg,rgba(18,161,80,.55),rgba(0,0,0,.07) 38%,rgba(18,161,80,.2)) border-box;
+  box-shadow:0 22px 50px -34px rgba(18,161,80,.4);
+}
+:root[data-theme="light"] .step::before{background:linear-gradient(90deg,transparent,rgba(18,161,80,.7),transparent)}
+@media (hover:hover) and (pointer:fine){
+  :root[data-theme="light"] .step:hover{box-shadow:0 26px 60px -28px rgba(18,161,80,.55)}
+}
+:root[data-theme="light"] .idx{border-color:var(--acc-text);color:var(--acc-text);box-shadow:0 0 10px rgba(18,161,80,.2)}
+:root[data-theme="light"] .amp-val b,
+:root[data-theme="light"] .up-id{color:var(--acc-text)}
+
+/* angka kecepatan */
+:root[data-theme="light"] .cell{background:rgba(0,0,0,.02)}
+:root[data-theme="light"] .cell:not(.rbx){border-color:var(--acc-line)}
+:root[data-theme="light"] .cell:not(.rbx) .big{color:var(--acc-text);text-shadow:none}
+:root[data-theme="light"] .cell.rbx{box-shadow:0 14px 30px -16px rgba(0,0,0,.45)}
+:root[data-theme="light"] .cell.rbx .label,
+:root[data-theme="light"] .cell.rbx .sub{color:#b8c4bc}
+
+/* kolom isian, dropdown, tombol, chip */
+:root[data-theme="light"] .chip,
+:root[data-theme="light"] .btn,
+:root[data-theme="light"] select,
+:root[data-theme="light"] .num{color:var(--acc-text);border-color:var(--acc-line);background:#fff}
+:root[data-theme="light"] .num:focus,
+:root[data-theme="light"] select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(18,161,80,.18)}
+:root[data-theme="light"] .chip:hover,
+:root[data-theme="light"] .btn:hover:not(:disabled){border-color:var(--acc)}
+:root[data-theme="light"] .chip[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:#03140a;box-shadow:0 0 14px rgba(18,161,80,.35)}
+:root[data-theme="light"] .btn.primary{background:linear-gradient(135deg,#3ddc84,#12a150);border-color:var(--acc);color:#03140a;box-shadow:0 10px 26px -10px rgba(18,161,80,.7)}
+:root[data-theme="light"] .btn.primary:hover:not(:disabled){background:#fff;color:var(--acc-text);box-shadow:0 0 0 1px var(--acc),0 8px 24px rgba(18,161,80,.3)}
+:root[data-theme="light"] .btn.primary:disabled{background:#dfe8e2;color:#8a9a90;box-shadow:none}
+:root[data-theme="light"] .drop{background:#fff;border-color:#9fb5a8}
+:root[data-theme="light"] .drop:hover,
+:root[data-theme="light"] .drop.over,
+:root[data-theme="light"] .drop:focus-within{border-color:var(--acc);background:#f0f7f2}
+:root[data-theme="light"] pre{background:#f0f5f1;color:var(--acc-text);border-color:var(--acc-line)}
+:root[data-theme="light"] .amp{border-top-color:var(--line)}
+:root[data-theme="light"] #s4>.amp+.amp{border-top-color:var(--line)}
+
+/* slider */
+:root[data-theme="light"] .slider::-webkit-slider-runnable-track{background:linear-gradient(90deg,var(--acc) var(--p,50%),#d4ddd7 var(--p,50%));box-shadow:none}
+:root[data-theme="light"] .slider::-webkit-slider-thumb{background:#fff;border-color:var(--acc);box-shadow:0 0 0 4px rgba(18,161,80,.18),0 2px 8px rgba(0,0,0,.2)}
+:root[data-theme="light"] .slider::-moz-range-track{background:#d4ddd7}
+:root[data-theme="light"] .slider::-moz-range-thumb{background:#fff;border-color:var(--acc);box-shadow:0 0 0 4px rgba(18,161,80,.18),0 2px 8px rgba(0,0,0,.2)}
+
+/* gelombang audio digambar gelap oleh script, jadi warnanya dibalik di tema terang */
+:root[data-theme="light"] .wave{background:#050a07;border-color:#050a07;filter:invert(1) hue-rotate(180deg)}
+
+/* footer dan placeholder hasil */
+:root[data-theme="light"] .foot{border-top-color:rgba(0,0,0,.1)}
+:root[data-theme="light"] .foot .copy{color:#2b342f}
+:root[data-theme="light"] .ph{background:rgba(18,161,80,.05)}
+:root[data-theme="light"] .ph b{color:#2b342f}
+
+/* riwayat upload */
+:root[data-theme="light"] .hrow{background:#fff}
+:root[data-theme="light"] .hid,
+:root[data-theme="light"] .hcopy{color:var(--acc-text)}
+:root[data-theme="light"] .hbadge.approved{color:var(--acc-text);border-color:var(--acc-line)}
+:root[data-theme="light"] .hbadge.pending{color:#946b00;border-color:#d9b84a}
+:root[data-theme="light"] .hbadge.rejected{color:#c62828;border-color:#e7a1a1}
+
+/* halaman depan (landing.css) */
+:root[data-theme="light"] .how li{background:#fff}
+:root[data-theme="light"] .pitch{background:#f0f7f2}
+:root[data-theme="light"] .pitch b{color:var(--acc-text)}
+:root[data-theme="light"] .userbar .sync{color:var(--acc-text)}
+
+/* bar pengguna dan akun Roblox (accounts.css) */
+:root[data-theme="light"] .av{background:#e4ebe6}
+:root[data-theme="light"] .vchip{background:#f0f7f2}
+:root[data-theme="light"] .pick.need select{box-shadow:0 0 0 3px rgba(0,0,0,.1)}
