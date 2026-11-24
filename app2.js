@@ -97,11 +97,18 @@
     }
     return false;
   }
-  async function ytCall(path){
+  async function ytCall(path, ms){
     var msg = 'Tidak bisa terhubung ke server. Coba lagi nanti.';
-    var r = null;
-    try { r = await fetch(YT_API + path); } catch(e){ r = null; }
-    if (!r || (r.status >= 502 && r.status <= 504)){
+    var r = null, ctl = new AbortController();
+    var timer = setTimeout(function(){ ctl.abort(); }, ms || 60000);
+    try { r = await fetch(YT_API + path, { signal: ctl.signal }); }
+    catch(e){
+      clearTimeout(timer);
+      if (e && e.name === 'AbortError') throw new Error('Server terlalu lama menjawab. Coba lagi nanti.');
+      r = null;
+    }
+    clearTimeout(timer);
+    if (!r || (r.status >= 502 && r.status <= 503)){
       if (!(await ytWake())) throw new Error(msg);
       ytStatus('Server sudah bangun, melanjutkan...');
       try { r = await fetch(YT_API + path); } catch(e2){ throw new Error(msg); }
@@ -113,13 +120,63 @@
     }
     return r;
   }
-  async function ytLoad(link, title){
-    ytRes.hidden = true; ytGo.disabled = true;
+  function ytId(link){
     try {
-      ytStatus('Mengambil audio dari YouTube... (pertama kali bisa sampai 30 detik)');
-      var r = await ytCall('/audio?url=' + encodeURIComponent(link));
+      var u = new URL(link), h = u.hostname.replace(/^(www|m|music)\./, '');
+      if (h === 'youtu.be') return u.pathname.slice(1).split('/')[0];
+      if (h === 'youtube.com'){
+        if (u.searchParams.get('v')) return u.searchParams.get('v');
+        var m = u.pathname.match(/^\/(shorts|embed|live|v)\/([\w-]{6,})/);
+        if (m) return m[2];
+      }
+    } catch(e){}
+    return '';
+  }
+  function ytThumb(id){ return 'https://i.ytimg.com/vi/' + encodeURIComponent(id) + '/mqdefault.jpg'; }
+  /* kartu preview: sampul + judul + channel */
+  var ytCard = document.createElement('div');
+  ytCard.hidden = true;
+  ytCard.style.cssText = 'display:flex;gap:12px;align-items:center;border:1px solid var(--acc-line);border-radius:14px;padding:10px;background:#050505';
+  ytRes.parentNode.insertBefore(ytCard, ytRes);
+  function ytShowCard(link, title, channel){
+    var id = ytId(link);
+    if (!id){ ytCard.hidden = true; return null; }
+    ytCard.textContent = '';
+    var img = document.createElement('img');
+    img.alt = ''; img.referrerPolicy = 'no-referrer'; img.src = ytThumb(id);
+    img.style.cssText = 'width:128px;max-width:40%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;flex:none;background:#111';
+    var box = document.createElement('div');
+    box.style.cssText = 'min-width:0;display:grid;gap:4px';
+    var t = document.createElement('div');
+    t.style.cssText = 'font-weight:700;line-height:1.3;overflow-wrap:anywhere';
+    t.textContent = title || 'Memuat judul...';
+    var c = document.createElement('div');
+    c.style.cssText = 'color:var(--mut);font-size:.85rem';
+    c.textContent = channel || '';
+    box.appendChild(t); box.appendChild(c);
+    ytCard.appendChild(img); ytCard.appendChild(box);
+    ytCard.hidden = false;
+    return { t: t, c: c };
+  }
+  function ytInfo(link, card, got){
+    fetch(YT_API + '/info?url=' + encodeURIComponent(link))
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){
+        if (j && j.title){ got.title = j.title; card.t.textContent = j.title; card.c.textContent = j.channel || ''; }
+        else if (!got.title) card.t.textContent = 'Video YouTube';
+      })
+      .catch(function(){ if (!got.title) card.t.textContent = 'Video YouTube'; });
+  }
+  async function ytLoad(link, title, channel){
+    ytRes.hidden = true; ytGo.disabled = true;
+    var got = { title: title || '' };
+    var card = ytShowCard(link, title, channel);
+    if (card && !title) ytInfo(link, card, got);
+    try {
+      ytStatus('Mengambil audio dari YouTube... (pertama kali bisa sampai 1-2 menit)');
+      var r = await ytCall('/audio?url=' + encodeURIComponent(link), 150000);
       var blob = await r.blob();
-      var base = (title || decodeURIComponent(r.headers.get('x-title') || '') || 'youtube').replace(/[\\\/:*?"<>|]+/g, ' ').trim().slice(0, 80) || 'youtube';
+      var base = (got.title || 'youtube').replace(/[\\\/:*?"<>|]+/g, ' ').trim().slice(0, 80) || 'youtube';
       var ext = /webm/.test(blob.type) ? '.webm' : '.m4a';
       ytStatus('');
       await load(new File([blob], base + ext, { type: blob.type || 'audio/mp4' }));
@@ -128,7 +185,7 @@
     } finally { ytGo.disabled = false; }
   }
   async function ytSearch(q){
-    ytGo.disabled = true; ytRes.hidden = true;
+    ytGo.disabled = true; ytRes.hidden = true; ytCard.hidden = true;
     try {
       ytStatus('Mencari...');
       var list = await (await ytCall('/search?q=' + encodeURIComponent(q))).json();
@@ -137,8 +194,15 @@
       list.forEach(function(it){
         var b = document.createElement('button');
         b.type = 'button'; b.className = 'btn';
-        b.textContent = it.title + (it.duration ? ' · ' + fmtTime(it.duration) : '') + (it.channel ? ' · ' + it.channel : '');
-        b.addEventListener('click', function(){ ytLoad('https://www.youtube.com/watch?v=' + it.id, it.title); });
+        b.style.cssText = 'display:flex;align-items:center;gap:12px;text-align:left;text-transform:none;letter-spacing:0';
+        var img = document.createElement('img');
+        img.alt = ''; img.loading = 'lazy'; img.referrerPolicy = 'no-referrer'; img.src = ytThumb(it.id);
+        img.style.cssText = 'width:96px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;flex:none;background:#111';
+        var tx = document.createElement('span');
+        tx.style.cssText = 'min-width:0;overflow-wrap:anywhere';
+        tx.textContent = it.title + (it.duration ? ' · ' + fmtTime(it.duration) : '') + (it.channel ? ' · ' + it.channel : '');
+        b.appendChild(img); b.appendChild(tx);
+        b.addEventListener('click', function(){ ytLoad('https://www.youtube.com/watch?v=' + it.id, it.title, it.channel); });
         ytRes.appendChild(b);
       });
       ytRes.hidden = false; ytStatus('Pilih lagunya:');
