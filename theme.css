@@ -107,3 +107,28 @@
 :root[data-theme="light"] .av{background:#e4ebe6}
 :root[data-theme="light"] .vchip{background:#f0f7f2}
 :root[data-theme="light"] .pick.need select{box-shadow:0 0 0 3px rgba(0,0,0,.1)}
+
+/* ===== Latar animasi ringan: cahaya hijau yang melayang pelan =====
+   Hanya CSS (tanpa JS, tanpa gambar). Yang bergerak cuma satu lapisan lewat transform,
+   jadi ditangani GPU. Otomatis mati kalau perangkat memakai pengaturan "kurangi gerakan". */
+html::before{
+  content:"";position:fixed;left:-25%;top:-25%;width:150%;height:150%;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(38% 34% at 25% 30%, rgba(61,220,132,.24), transparent 70%),
+    radial-gradient(34% 30% at 75% 60%, rgba(0,200,255,.12), transparent 70%),
+    radial-gradient(30% 28% at 45% 85%, rgba(61,220,132,.16), transparent 70%);
+  animation:aurora 22s ease-in-out infinite alternate;
+  will-change:transform;
+}
+:root[data-theme="light"]::before{
+  background:
+    radial-gradient(38% 34% at 25% 30%, rgba(18,161,80,.18), transparent 70%),
+    radial-gradient(34% 30% at 75% 60%, rgba(0,160,200,.09), transparent 70%),
+    radial-gradient(30% 28% at 45% 85%, rgba(18,161,80,.12), transparent 70%);
+}
+@keyframes aurora{
+  0%{transform:translate3d(-4%,-2%,0) rotate(0deg) scale(1)}
+  50%{transform:translate3d(3%,4%,0) rotate(6deg) scale(1.08)}
+  100%{transform:translate3d(5%,-3%,0) rotate(-5deg) scale(1.02)}
+}
+@media (prefers-reduced-motion:reduce){html::before{animation:none!important}}
