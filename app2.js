@@ -81,7 +81,7 @@
   }
 
   /* YouTube: audio diambil lewat server kecil, langsung masuk memori browser (tidak disimpan ke perangkat) */
-  var YT_API = 'https://maxstudio-78341.containers.snapdeploy.app';
+  var YT_API = '/api/yt';
   var ytUrl = $('yturl'), ytGo = $('ytgo'), ytRes = $('ytres'), ytSt = $('ytstatus');
   function ytStatus(msg, err){ ytSt.textContent = msg; ytSt.className = 'status' + (err ? ' err' : ''); }
   function isYtLink(s){ return /^(https?:\/\/)?((www|m|music)\.)?(youtube\.com|youtu\.be)\//i.test(s); }
@@ -98,13 +98,13 @@
     return false;
   }
   async function ytCall(path){
-    var r;
-    try { r = await fetch(YT_API + path); }
-    catch(e){
-      if (!(await ytWake())) throw new Error('Tidak bisa terhubung ke server. Coba lagi nanti, atau cek ALLOWED_ORIGIN di SnapDeploy.');
+    var msg = 'Tidak bisa terhubung ke server. Coba lagi nanti.';
+    var r = null;
+    try { r = await fetch(YT_API + path); } catch(e){ r = null; }
+    if (!r || (r.status >= 502 && r.status <= 504)){
+      if (!(await ytWake())) throw new Error(msg);
       ytStatus('Server sudah bangun, melanjutkan...');
-      try { r = await fetch(YT_API + path); }
-      catch(e2){ throw new Error('Tidak bisa terhubung ke server. Coba lagi nanti, atau cek ALLOWED_ORIGIN di SnapDeploy.'); }
+      try { r = await fetch(YT_API + path); } catch(e2){ throw new Error(msg); }
     }
     if (!r.ok){
       var m = 'Server sedang bermasalah, coba lagi.';
