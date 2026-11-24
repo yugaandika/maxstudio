@@ -1,12 +1,17 @@
-// Server kecil: ambil audio YouTube (maks ~10 menit) lalu kirim ke web MAX STUDIO.
+// Server kecil: ambil audio YouTube (maks ~15 menit) lalu kirim ke web MAX STUDIO.
 // Tidak menyimpan file apa pun; audio langsung dialirkan ke browser.
 import http from "node:http";
 import { spawn } from "node:child_process";
 import { copyFileSync, existsSync } from "node:fs";
 
 const PORT = Number(process.env.PORT || 10000);
-const ORIGIN = process.env.ALLOWED_ORIGIN || "https://maxstudio-ym3g.netlify.app";
-const MAX_SEC = Number(process.env.MAX_SEC || 660);
+// Alamat website yang boleh memanggil server ini (pisahkan dengan koma).
+// Bisa diubah lewat environment variable ALLOWED_ORIGIN di SnapDeploy.
+const ORIGINS = (
+  process.env.ALLOWED_ORIGIN ||
+  "https://maxstudio-ym3g.netlify.app,https://maxstudio-cn9.pages.dev"
+).split(",").map((s) => s.trim()).filter(Boolean);
+const MAX_SEC = Number(process.env.MAX_SEC || 900);
 const MAX_JOBS = 2;
 const HOSTS = ["youtube.com", "www.youtube.com", "m.youtube.com", "music.youtube.com", "youtu.be"];
 
@@ -55,7 +60,9 @@ function friendly(e) {
 }
 
 const server = http.createServer(async (req, res) => {
-  res.setHeader("access-control-allow-origin", ORIGIN);
+  const origin = req.headers.origin;
+  if (ORIGINS.includes(origin)) res.setHeader("access-control-allow-origin", origin);
+  res.setHeader("vary", "origin");
   res.setHeader("access-control-expose-headers", "x-title");
   if (req.method === "OPTIONS") { res.writeHead(204); return res.end(); }
   const u = new URL(req.url, "http://x");
@@ -89,7 +96,7 @@ const server = http.createServer(async (req, res) => {
       const type = info.ext === "webm" ? "audio/webm" : "audio/mp4";
       res.writeHead(200, { "content-type": type, "x-title": encodeURIComponent(info.title || "youtube") });
       child = spawn("yt-dlp", [...BASE, "-f", FORMAT, "-o", "-", "--", link]);
-      const kill = setTimeout(() => child.kill("SIGKILL"), 120000);
+      const kill = setTimeout(() => child.kill("SIGKILL"), 240000);
       child.stdout.pipe(res);
       child.on("close", () => { clearTimeout(kill); done(); res.end(); });
       res.on("close", () => child.kill("SIGKILL"));
