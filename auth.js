@@ -159,6 +159,44 @@
     });
   }
 
+  /* ---------- tema gelap / terang: default gelap, tersimpan di akun Discord (tabel user_prefs) ---------- */
+  var TKEY = 'maxstudio.theme';
+  var theme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+  var ttok = 0;
+  var ICON_SUN = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+  var ICON_MOON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+  function paintThemeBtn(){
+    var b = $('themebtn'); if (!b) return;
+    b.innerHTML = (theme === 'dark' ? ICON_SUN : ICON_MOON) + '<span>' + (theme === 'dark' ? 'Terang' : 'Gelap') + '</span>';
+    b.setAttribute('aria-label', 'Ganti ke tema ' + (theme === 'dark' ? 'terang' : 'gelap'));
+  }
+  function applyTheme(t, keep){
+    theme = t === 'light' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', theme);
+    try { if (keep === false) localStorage.removeItem(TKEY); else localStorage.setItem(TKEY, theme); } catch(e){}
+    var m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.setAttribute('content', theme === 'light' ? '#f4f6f4' : '#000000');
+    paintThemeBtn();
+  }
+  function tpull(){
+    if (!sb || !user) return Promise.resolve();
+    var uid0 = user.id, tk = ++ttok;
+    return Promise.resolve(sb.from('user_prefs').select('theme').eq('user_id', uid0).maybeSingle()).then(function(r){
+      if (tk !== ttok || !user || user.id !== uid0) return;
+      if (r.error) { note('tema belum bisa dimuat dari akun'); return; }
+      applyTheme(r.data && r.data.theme === 'light' ? 'light' : 'dark');
+    });
+  }
+  function toggleTheme(){
+    var next = theme === 'dark' ? 'light' : 'dark';
+    ++ttok;
+    applyTheme(next);
+    if (!user || !sb) return;
+    Promise.resolve(sb.from('user_prefs').upsert({ user_id: user.id, theme: next, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })).then(function(r){
+      if (r.error) note('tema gagal disimpan ke akun');
+    });
+  }
+
   window.MSAuth = {
     max: MAX,
     list: function(){ return accs.slice(); },
@@ -214,7 +252,7 @@
     lset([]); hlset([]);
     try { sessionStorage.removeItem(GUEST); } catch(e){}
     user = null; cloud = false; warn = ''; hcloud = false; hwarn = '';
-    setAccs([]); hset([]); render();
+    setAccs([]); hset([]); applyTheme('dark', false); render();
     if (sb) sb.auth.signOut({ scope: 'local' });
   }
   function wipe(){
@@ -222,20 +260,26 @@
     removeAll().then(function(r){ note(r.ok ? 'semua akun dihapus' : 'gagal menghapus'); });
   }
 
+  function themeBtn(parent){
+    var t = el('button', 'btn'); t.type = 'button'; t.id = 'themebtn'; t.onclick = toggleTheme;
+    parent.appendChild(t); paintThemeBtn();
+  }
   function bar(){
     var b = $('userbar'); if (!b) return;
     b.textContent = '';
-    if (!sb) return;
+    if (!sb) { themeBtn(b); return; }
     if (user) {
       var m = user.user_metadata || {};
       var name = (m.custom_claims && m.custom_claims.global_name) || m.full_name || m.name || 'Discord';
       if (m.avatar_url) { var im = el('img'); im.alt = ''; im.src = m.avatar_url; b.appendChild(im); }
       b.appendChild(el('span', 'un', name));
       b.appendChild(el('span', 'sync')).id = 'syncmsg';
+      themeBtn(b);
       var w = el('button', 'btn', 'Hapus semua akun'); w.type = 'button'; w.onclick = wipe; b.appendChild(w);
       var o = el('button', 'btn', 'Logout'); o.type = 'button'; o.onclick = logout; b.appendChild(o);
     } else {
       b.appendChild(el('span', 'un', 'Tanpa login'));
+      themeBtn(b);
       var i = el('button', 'btn', 'Login Discord'); i.type = 'button'; i.onclick = login; b.appendChild(i);
     }
   }
@@ -248,7 +292,7 @@
     var prev = user && user.id;
     user = session ? session.user : null;
     render();
-    if (user && user.id !== prev) { pull(); hpull(); }
+    if (user && user.id !== prev) { pull(); hpull(); tpull(); }
     else if (!user) { cloud = false; warn = ''; hcloud = false; hwarn = ''; setAccs(lget()); hset(hlget()); }
   }
 
