@@ -2,6 +2,7 @@
   var URL_ = 'https://aqfeyrgwysxdouaetmat.supabase.co';
   var KEY_ = 'sb_publishable_14SgkcxUcbr2cCtF5sd-kg_lh4IyfoW';
   var GUEST = 'maxstudio.guest', LOCAL = 'maxstudio.accounts', OLD = 'maxstudio.roblox', MAX = 3;
+  var HKEY = 'maxstudio.history', HMAX = 100;
   var body = document.body;
   function $(id){ return document.getElementById(id); }
   function show(s){ body.classList.remove('boot', 's-landing', 's-app'); body.classList.add(s); }
@@ -68,13 +69,113 @@
     });
   }
 
+  /* ---------- riwayat upload: tersimpan di akun Discord (tabel upload_history), atau di perangkat kalau tanpa login ---------- */
+  var hist = [], hsubs = [], hcloud = false, hwarn = '';
+  function isLocalId(id){ return String(id).charAt(0) === 'l'; }
+  function hlget(){
+    try {
+      var a = JSON.parse(localStorage.getItem(HKEY) || '[]');
+      return Array.isArray(a) ? a.filter(function(r){ return r && r.id && r.u; }).slice(0, HMAX) : [];
+    } catch(e){ return []; }
+  }
+  function hlset(a){ try { if (a.length) localStorage.setItem(HKEY, JSON.stringify(a)); else localStorage.removeItem(HKEY); } catch(e){} }
+  function persistLocal(){ hlset(hist.filter(function(r){ return isLocalId(r.id); })); }
+  function hemit(){ hsubs.forEach(function(f){ try { f(); } catch(e){} }); }
+  function hset(a){ hist = a.slice(0, HMAX); hemit(); }
+  function hfind(id){ for (var i = 0; i < hist.length; i++) if (hist[i].id === id) return i; return -1; }
+  function hrow(d){
+    return { id: d.id, u: String(d.roblox_id), un: d.roblox_name || '', n: d.name || '', a: d.asset_id || '', o: d.operation_id || '', s: d.status || 'pending', t: Date.parse(d.created_at) || Date.now() };
+  }
+  hist = hlget();
+
+  function hpull(){
+    if (!sb || !user) return Promise.resolve();
+    var uid0 = user.id;
+    return Promise.resolve(
+      sb.from('upload_history').select('id,roblox_id,roblox_name,name,asset_id,operation_id,status,created_at').order('created_at', { ascending: false }).limit(HMAX)
+    ).then(function(r){
+      if (!user || user.id !== uid0) return;
+      if (r.error) {
+        hcloud = false;
+        hwarn = 'Riwayat belum bisa disimpan di akunmu (' + (r.error.message || 'error') + '). Riwayat sementara disimpan di perangkat ini.';
+        hset(hlget()); return;
+      }
+      hcloud = true; hwarn = '';
+      hset((r.data || []).map(hrow));
+    });
+  }
+  function hadd(e){
+    var row = { id: 'l' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), u: String(e.u || ''), un: String(e.un || ''), n: String(e.n || '').slice(0, 50), a: String(e.a || ''), o: String(e.o || ''), s: e.s || 'pending', t: Date.now() };
+    function local(){
+      hist = [row].concat(hist).slice(0, HMAX); persistLocal(); hemit();
+      return { ok: true, row: row };
+    }
+    if (!hcloud || !user) return Promise.resolve(local());
+    return Promise.resolve(
+      sb.from('upload_history').insert({ roblox_id: row.u, roblox_name: row.un, name: row.n, asset_id: row.a || null, operation_id: row.o || null, status: row.s }).select('id,created_at').single()
+    ).then(function(r){
+      if (r.error || !r.data) {
+        hwarn = 'Riwayat gagal disimpan ke akunmu (' + ((r.error && r.error.message) || 'error') + '). Disimpan di perangkat ini.';
+        return local();
+      }
+      row.id = r.data.id; row.t = Date.parse(r.data.created_at) || row.t;
+      hset([row].concat(hist));
+      return { ok: true, row: row };
+    });
+  }
+  function hupdate(id, p){
+    var i = hfind(id); if (i < 0) return Promise.resolve({ ok: false });
+    var next = hist.slice(), r = {};
+    for (var k in next[i]) r[k] = next[i][k];
+    for (var k2 in p) r[k2] = p[k2];
+    next[i] = r;
+    hist = next;
+    if (isLocalId(id)) { persistLocal(); hemit(); return Promise.resolve({ ok: true }); }
+    hemit();
+    var q = { updated_at: new Date().toISOString() };
+    if (p.s !== undefined) q.status = p.s;
+    if (p.a !== undefined) q.asset_id = p.a || null;
+    if (p.o !== undefined) q.operation_id = p.o || null;
+    return Promise.resolve(sb.from('upload_history').update(q).eq('id', id)).then(function(res){
+      return res.error ? { ok: false, msg: res.error.message } : { ok: true };
+    });
+  }
+  function hremove(ids){
+    var set = {}; ids.forEach(function(x){ set[x] = 1; });
+    var cl = ids.filter(function(x){ return !isLocalId(x); });
+    hist = hist.filter(function(r){ return !set[r.id]; });
+    persistLocal(); hemit();
+    if (!cl.length || !user) return Promise.resolve({ ok: true });
+    return Promise.resolve(sb.from('upload_history').delete().in('id', cl)).then(function(res){
+      return res.error ? { ok: false, msg: 'Gagal menghapus dari akunmu: ' + res.error.message } : { ok: true };
+    });
+  }
+  function hclear(){
+    var hadCloud = hist.some(function(r){ return !isLocalId(r.id); });
+    hist = []; hlset([]); hemit();
+    if (!hadCloud || !user) return Promise.resolve({ ok: true });
+    return Promise.resolve(sb.from('upload_history').delete().eq('user_id', user.id)).then(function(res){
+      return res.error ? { ok: false, msg: 'Gagal menghapus dari akunmu: ' + res.error.message } : { ok: true };
+    });
+  }
+
   window.MSAuth = {
     max: MAX,
     list: function(){ return accs.slice(); },
     add: add,
     remove: remove,
     onChange: function(f){ subs.push(f); },
-    info: function(){ return { cloud: cloud, loading: loading, warn: warn, login: !!user }; }
+    info: function(){ return { cloud: cloud, loading: loading, warn: warn, login: !!user }; },
+    hist: {
+      max: HMAX,
+      list: function(){ return hist.slice(); },
+      add: hadd,
+      update: hupdate,
+      remove: hremove,
+      clear: hclear,
+      onChange: function(f){ hsubs.push(f); },
+      info: function(){ return { cloud: hcloud, warn: hwarn, login: !!user }; }
+    }
   };
 
   function importLocal(loc){
@@ -110,9 +211,10 @@
       .then(function(r){ if (r && r.error) alert('Login gagal: ' + r.error.message); });
   }
   function logout(){
-    lset([]);
+    lset([]); hlset([]);
     try { sessionStorage.removeItem(GUEST); } catch(e){}
-    user = null; cloud = false; warn = ''; setAccs([]); render();
+    user = null; cloud = false; warn = ''; hcloud = false; hwarn = '';
+    setAccs([]); hset([]); render();
     if (sb) sb.auth.signOut({ scope: 'local' });
   }
   function wipe(){
@@ -146,8 +248,8 @@
     var prev = user && user.id;
     user = session ? session.user : null;
     render();
-    if (user && user.id !== prev) pull();
-    else if (!user) { cloud = false; warn = ''; setAccs(lget()); }
+    if (user && user.id !== prev) { pull(); hpull(); }
+    else if (!user) { cloud = false; warn = ''; hcloud = false; hwarn = ''; setAccs(lget()); hset(hlget()); }
   }
 
   var bl = $('btn-login'), bg = $('btn-guest');
