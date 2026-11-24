@@ -85,8 +85,27 @@
   var ytUrl = $('yturl'), ytGo = $('ytgo'), ytRes = $('ytres'), ytSt = $('ytstatus');
   function ytStatus(msg, err){ ytSt.textContent = msg; ytSt.className = 'status' + (err ? ' err' : ''); }
   function isYtLink(s){ return /^(https?:\/\/)?((www|m|music)\.)?(youtube\.com|youtu\.be)\//i.test(s); }
+  function ytSleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+  async function ytAwake(){
+    try { var h = await fetch(YT_API + '/health'); return h.ok; } catch(e){ return false; }
+  }
+  async function ytWake(){
+    ytStatus('Server sedang bangun dari tidur, tunggu sekitar 1-2 menit...');
+    for (var i = 0; i < 24; i++){
+      if (await ytAwake()) return true;
+      await ytSleep(5000);
+    }
+    return false;
+  }
   async function ytCall(path){
-    var r = await fetch(YT_API + path);
+    var r;
+    try { r = await fetch(YT_API + path); }
+    catch(e){
+      if (!(await ytWake())) throw new Error('Tidak bisa terhubung ke server. Coba lagi nanti, atau cek ALLOWED_ORIGIN di SnapDeploy.');
+      ytStatus('Server sudah bangun, melanjutkan...');
+      try { r = await fetch(YT_API + path); }
+      catch(e2){ throw new Error('Tidak bisa terhubung ke server. Coba lagi nanti, atau cek ALLOWED_ORIGIN di SnapDeploy.'); }
+    }
     if (!r.ok){
       var m = 'Server sedang bermasalah, coba lagi.';
       try { m = (await r.json()).error || m; } catch(e){}
@@ -133,6 +152,8 @@
     if (isYtLink(v)) ytLoad(v.indexOf('http') === 0 ? v : 'https://' + v);
     else ytSearch(v);
   }
+  /* bangunkan server begitu halaman dibuka (kalau sedang tidur) */
+  try { fetch(YT_API + '/health', { mode: 'no-cors' }).catch(function(){}); } catch(e){}
   ytGo.addEventListener('click', ytSubmit);
   ytUrl.addEventListener('keydown', function(e){ if (e.key === 'Enter') ytSubmit(); });
 
