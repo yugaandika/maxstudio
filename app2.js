@@ -5,24 +5,24 @@
   });
 
   /* waveform: two cached layers (dim, bright), bright is clipped to the playhead */
-  var dim = null, bright = null, W = 0, H = 0;
+  var dim = null, bright = null, W = 0, WH = 0;
   function buildWave(){
     var dpr = window.devicePixelRatio || 1;
-    W = wave.clientWidth; H = wave.clientHeight;
-    wave.width = Math.round(W*dpr); wave.height = Math.round(H*dpr);
+    W = wave.clientWidth; WH = wave.clientHeight;
+    wave.width = Math.round(W*dpr); wave.height = Math.round(WH*dpr);
     dim = document.createElement('canvas'); bright = document.createElement('canvas');
     dim.width = bright.width = wave.width; dim.height = bright.height = wave.height;
     var gd = dim.getContext('2d'), gb = bright.getContext('2d');
     gd.scale(dpr,dpr); gb.scale(dpr,dpr);
     gd.fillStyle = '#25402f'; gb.fillStyle = '#3ddc84';
-    if (!buf){ gd.fillRect(0, H/2, W, 1); paint(); return; }
+    if (!buf){ gd.fillRect(0, WH/2, W, 1); paint(); return; }
     var data = buf.getChannelData(0), bars = Math.max(1, Math.floor(W/3)), step = Math.max(1, Math.floor(data.length/bars));
     var skip = Math.max(1, step >> 6);
     for (var i = 0; i < bars; i++){
       var mx = 0;
       for (var j = 0; j < step; j += skip){ var v = Math.abs(data[i*step + j] || 0); if (v > mx) mx = v; }
-      var bh = Math.max(2, mx*H*0.92);
-      gd.fillRect(i*3, (H-bh)/2, 2, bh); gb.fillRect(i*3, (H-bh)/2, 2, bh);
+      var bh = Math.max(2, mx*WH*0.92);
+      gd.fillRect(i*3, (WH-bh)/2, 2, bh); gb.fillRect(i*3, (WH-bh)/2, 2, bh);
     }
     paint();
   }
