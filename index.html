@@ -56,7 +56,43 @@
       <li>OGG siap Roblox</li>
       <li>Amplify otomatis</li>
     </ul>
-  </header>
+    <nav class="tabs" id="tabs" aria-label="Menu">
+    <button class="chip" id="tab-ps" type="button" aria-pressed="true">Playbackspeed</button>
+    <button class="chip" id="tab-perm" type="button" aria-pressed="false">Asset Permission</button>
+  </nav>
+</header>
+
+  <section class="step" id="permpane" aria-labelledby="h-perm">
+    <div class="step-head"><span class="idx">A</span><h2 id="h-perm">Asset permission</h2></div>
+    <p class="note">Beri izin pakai audio ke banyak ID sekaligus. Versi percobaan: kalau Roblox menolak, pesan aslinya ditampilkan di hasil.</p>
+    <div class="pick">
+      <span class="label">Akun pemilik audio</span>
+      <div class="pickrow"><div class="pickmain"><select id="pacc" aria-label="Pilih akun Roblox pemilik audio"></select><span class="pickinfo" id="pinfo2"></span></div></div>
+    </div>
+    <div class="stack">
+      <span class="label">Tujuan izin</span>
+      <div class="row" id="ptypes" role="group" aria-label="Jenis tujuan">
+        <button class="chip" id="pt-user" type="button" aria-pressed="true">Akun (username)</button>
+        <button class="chip" id="pt-group" type="button" aria-pressed="false">Group (ID)</button>
+      </div>
+      <div class="row">
+        <input class="num wide" id="ptarget" type="text" autocomplete="off" spellcheck="false" placeholder="Ketik username Roblox">
+        <button class="btn" id="pfind" type="button">Cari</button>
+      </div>
+      <div class="vchip" id="pchip" hidden></div>
+      <p class="status" id="pnote" role="status" aria-live="polite"></p>
+      <p class="status" id="pconn" role="status" aria-live="polite"></p>
+    </div>
+    <label class="field"><span class="label">ID audio, satu ID per baris <b id="pcount">0</b></span>
+      <textarea class="num wide permta" id="pids" rows="6" spellcheck="false" placeholder="123456789&#10;987654321"></textarea>
+    </label>
+    <div class="row">
+      <button class="btn primary" id="pgo" type="button" disabled>Beri izin</button>
+      <button class="btn" id="pclear" type="button">Bersihkan</button>
+    </div>
+    <progress id="pprog" max="1" value="0" hidden></progress>
+    <div class="plog" id="plog" role="log" aria-live="polite"></div>
+  </section>
 
   <section class="step" id="s1" aria-labelledby="h-file">
     <div class="step-head"><span class="idx">1</span><h2 id="h-file">File musik</h2></div>
@@ -245,5 +281,6 @@ window.__createOggEncoder = function(){
   .catch(function(e){ document.body.insertAdjacentHTML('afterbegin','<p style="color:#fff;padding:16px">Gagal memuat file: '+e.message+'</p>'); });
 })();
 </script>
+<script src="perm.js"></script>
 </body>
 </html>
