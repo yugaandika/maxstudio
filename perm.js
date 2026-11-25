@@ -168,5 +168,40 @@
     busy = false; prog.hidden = true; ready();
   };
 
+  /* Diagnosa: mencoba beberapa bentuk permintaan ke Roblox dengan ID audio pertama, lalu menampilkan balasan tiap percobaan. */
+  $('pdiag').onclick = async function(){
+    var a = cur(), list = ids(), log = $('plog');
+    log.textContent = '';
+    if (busy || !a || !tgt || !list.length){ log.appendChild(mk('div', 'pl err', 'Pilih akun, cari tujuan, dan isi satu ID audio dulu.')); return; }
+    busy = true; ready();
+    var id = list[0], st = { user: 'User', group: 'Group', universe: 'Universe' }[type];
+    var it = { subjectType: st, subjectId: tgt.id, action: PERM.action };
+    var withId = Object.assign({ assetId: id }, it);
+    var nums = { assetId: Number(id), subjectType: st, subjectId: Number(tgt.id), action: PERM.action };
+    var E1 = PERM.path, E2 = PERM.alt(id);
+    var combos = [
+      ['PATCH', E1, { requests: [withId] }, 'E1 requests'],
+      ['PATCH', E1, { requests: [nums] }, 'E1 requests angka'],
+      ['PATCH', E1, withId, 'E1 tanpa requests'],
+      ['PATCH', E2, { requests: [it] }, 'E2 requests'],
+      ['PATCH', E2, it, 'E2 tanpa requests'],
+      ['POST', E1, { requests: [withId] }, 'POST E1'],
+      ['POST', E2, it, 'POST E2'],
+      ['PATCH', E1, { requests: [{ assetId: id, subject: { subjectType: st, subjectId: tgt.id }, action: PERM.action }] }, 'E1 subject bersarang']
+    ];
+    for (var k = 0; k < combos.length; k++){
+      var c = combos[k], line = mk('div', 'pl'), r, t;
+      try {
+        r = await fetch(API + c[1], { method: c[0], headers: { 'Content-Type': 'application/json', 'x-api-key': a.k }, body: JSON.stringify(c[2]) });
+        t = await r.text();
+        line.textContent = (r.ok ? '✓ ' : '• ') + '#' + (k + 1) + ' ' + c[3] + ' → ' + r.status + ' ' + t.slice(0, 150);
+        if (!r.ok) line.className = 'pl err';
+      } catch(e){ line.textContent = '• #' + (k + 1) + ' ' + c[3] + ' → gagal terhubung'; line.className = 'pl err'; }
+      log.appendChild(line); await wait(800);
+    }
+    log.appendChild(mk('div', 'pl', 'Diagnosa selesai.'));
+    busy = false; ready();
+  };
+
   renderAcc(); ready();
 })();
