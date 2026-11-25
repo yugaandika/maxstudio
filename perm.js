@@ -174,20 +174,16 @@
     log.textContent = '';
     if (busy || !a || !tgt || !list.length){ log.appendChild(mk('div', 'pl err', 'Pilih akun, cari tujuan, dan isi satu ID audio dulu.')); return; }
     busy = true; ready();
-    var id = list[0], st = { user: 'User', group: 'Group', universe: 'Universe' }[type];
-    var it = { subjectType: st, subjectId: tgt.id, action: PERM.action };
-    var withId = Object.assign({ assetId: id }, it);
-    var nums = { assetId: Number(id), subjectType: st, subjectId: Number(tgt.id), action: PERM.action };
-    var E1 = PERM.path, E2 = PERM.alt(id);
+    var id = list[0], st = { user: 'User', group: 'Group', universe: 'Universe' }[type], sid = tgt.id, ac = PERM.action;
     var combos = [
-      ['PATCH', E1, { requests: [withId] }, 'E1 requests'],
-      ['PATCH', E1, { requests: [nums] }, 'E1 requests angka'],
-      ['PATCH', E1, withId, 'E1 tanpa requests'],
-      ['PATCH', E2, { requests: [it] }, 'E2 requests'],
-      ['PATCH', E2, it, 'E2 tanpa requests'],
-      ['POST', E1, { requests: [withId] }, 'POST E1'],
-      ['POST', E2, it, 'POST E2'],
-      ['PATCH', E1, { requests: [{ assetId: id, subject: { subjectType: st, subjectId: tgt.id }, action: PERM.action }] }, 'E1 subject bersarang']
+      ['PATCH', PERM.path, { assetIds: [id], subjectType: st, subjectId: sid, action: ac }, 'assetIds + subject'],
+      ['PATCH', PERM.path, { assetIds: [id], subjectType: st, subjectId: sid }, 'assetIds tanpa action'],
+      ['PATCH', PERM.path, { assetIds: [Number(id)], subjectType: st, subjectId: Number(sid), action: ac }, 'assetIds angka'],
+      ['PATCH', PERM.path, { assetIds: [id], subjectType: st.toLowerCase(), subjectId: sid, action: ac }, 'assetIds huruf kecil'],
+      ['PATCH', PERM.path, { assetIds: [id], requests: [{ subjectType: st, subjectId: sid, action: ac }] }, 'assetIds + requests'],
+      ['PATCH', PERM.path, { assetIds: [id], requests: [{ subjectType: st, subjectId: sid }] }, 'assetIds + requests tanpa action'],
+      ['PATCH', PERM.path, { assetIds: [id], subjects: [{ subjectType: st, subjectId: sid }], action: ac }, 'assetIds + subjects'],
+      ['PATCH', PERM.path, { assetIds: [id], subject: { subjectType: st, subjectId: sid }, action: ac }, 'assetIds + subject bersarang']
     ];
     for (var k = 0; k < combos.length; k++){
       var c = combos[k], line = mk('div', 'pl'), r, t;
