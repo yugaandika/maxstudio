@@ -125,12 +125,21 @@
     var t = await r.text(), j = null; try { j = JSON.parse(t); } catch(e){}
     return { r: r, j: j, t: t };
   }
+  /* Roblox menolak "User" sebagai SubjectType, jadi beberapa penulisan dicoba otomatis. Yang berhasil diingat. */
+  var VAR = { user: ['User', 'USER', 'user', 'SUBJECT_TYPE_USER'], group: ['Group', 'GROUP', 'group', 'SUBJECT_TYPE_GROUP'] };
+  var okVar = {};
   async function grant(assetId, key){
-    var item = { subjectType: type === 'user' ? 'User' : 'Group', subjectId: tgt.id, action: PERM.action };
-    var o = await send(PERM.path, { requests: [Object.assign({ assetId: assetId }, item)] }, key);
-    if (o.r.status === 404 || o.r.status === 405) o = await send(PERM.alt(assetId), { requests: [item] }, key);
-    var bad = o.j && Array.isArray(o.j.errors) && o.j.errors.length;
-    return { ok: o.r.ok && !bad, status: o.r.status, msg: o.r.ok && !bad ? '' : errText(o.r, o.j, o.t) };
+    var list = okVar[type] ? [okVar[type]] : VAR[type], o = null, tried = [], good = false;
+    for (var i = 0; i < list.length; i++){
+      tried.push(list[i]);
+      var item = { subjectType: list[i], subjectId: tgt.id, action: PERM.action };
+      o = await send(PERM.path, { requests: [Object.assign({ assetId: assetId }, item)] }, key);
+      if (o.r.status === 404 || o.r.status === 405) o = await send(PERM.alt(assetId), { requests: [item] }, key);
+      var bad = o.j && Array.isArray(o.j.errors) && o.j.errors.length;
+      if (o.r.ok && !bad){ good = true; okVar[type] = list[i]; break; }
+      if (!(o.r.status === 400 && /subjecttype/i.test(o.t || ''))) break;
+    }
+    return { ok: good, status: o.r.status, msg: good ? '' : errText(o.r, o.j, o.t) + (tried.length > 1 ? ' (dicoba: ' + tried.join(', ') + ')' : '') };
   }
   $('pgo').onclick = async function(){
     var a = cur(), list = ids(), log = $('plog'), prog = $('pprog');
