@@ -130,39 +130,49 @@
     var t = await r.text(), j = null; try { j = JSON.parse(t); } catch(e){}
     return { r: r, j: j, t: t };
   }
-  /* Roblox menolak "User" sebagai SubjectType, jadi beberapa penulisan dicoba otomatis. Yang berhasil diingat. */
-  var VAR = { user: ['User', 'USER', 'user', 'SUBJECT_TYPE_USER'], group: ['Group', 'GROUP', 'group', 'SUBJECT_TYPE_GROUP'], universe: ['Universe', 'UNIVERSE', 'universe', 'SUBJECT_TYPE_UNIVERSE'] };
-  var okVar = {};
-  async function grant(assetId, key){
-    var list = okVar[type] ? [okVar[type]] : VAR[type], o = null, tried = [], good = false;
-    for (var i = 0; i < list.length; i++){
-      tried.push(list[i]);
-      var item = { subjectType: list[i], subjectId: tgt.id, action: PERM.action };
-      o = await send(PERM.path, { requests: [Object.assign({ assetId: assetId }, item)] }, key);
-      if (o.r.status === 404 || o.r.status === 405) o = await send(PERM.alt(assetId), { requests: [item] }, key);
-      var bad = o.j && Array.isArray(o.j.errors) && o.j.errors.length;
-      if (o.r.ok && !bad){ good = true; okVar[type] = list[i]; break; }
-      if (!(o.r.status === 400 && /subjecttype/i.test(o.t || ''))) break;
-    }
-    return { ok: good, status: o.r.status, msg: good ? '' : errText(o.r, o.j, o.t) + (tried.length > 1 ? ' (dicoba: ' + tried.join(', ') + ')' : '') + (o.r.status === 400 ? ' [balasan: ' + String(o.t || '').slice(0, 220) + ']' : '') };
+  /* Bentuk permintaan yang diterima Roblox (hasil Diagnosa): satu permintaan berisi banyak assetIds. */
+  var CHUNK = 20;
+  async function grantBatch(list, key){
+    var st = { user: 'User', group: 'Group', universe: 'Universe' }[type];
+    var o = await send(PERM.path, { assetIds: list, subjectType: st, subjectId: tgt.id, action: PERM.action }, key);
+    var j = o.j || {}, okSet = {}, errBy = {}, general = '';
+    (Array.isArray(j.successAssetIds) ? j.successAssetIds : []).forEach(function(x){ okSet[String(x)] = 1; });
+    (Array.isArray(j.errors) ? j.errors : []).forEach(function(e){
+      var id = e && (e.assetId || e.assetID || e.id);
+      var msg = e && (e.message || e.code) ? (String(e.code !== undefined ? e.code + ' ' : '') + (e.message || '')).trim() : JSON.stringify(e);
+      if (id) errBy[String(id)] = msg; else general = general ? general + '; ' + msg : msg;
+    });
+    return { ok: o.r.ok, status: o.r.status, j: o.j, raw: o.t, okSet: okSet, errBy: errBy, general: general };
   }
   $('pgo').onclick = async function(){
-    var a = cur(), list = ids(), log = $('plog'), prog = $('pprog');
-    if (busy || !a || !tgt || !list.length) return;
-    if (!confirm('Beri izin ' + list.length + ' audio ke ' + tgt.name + '?')) return;
+    var a = cur(), all = ids(), log = $('plog'), prog = $('pprog');
+    if (busy || !a || !tgt || !all.length) return;
+    if (!confirm('Beri izin ' + all.length + ' audio ke ' + tgt.name + '?')) return;
     busy = true; ready(); log.textContent = ''; prog.hidden = false; prog.value = 0;
-    var ok = 0, fail = 0;
-    for (var i = 0; i < list.length; i++){
-      var line = mk('div', 'pl'), res;
-      try { res = await grant(list[i], a.k); } catch(e){ res = { ok: false, status: 0, msg: 'Tidak bisa menghubungi Roblox.' }; }
-      line.textContent = (res.ok ? '✓ ' : '✗ ') + list[i] + (res.ok ? ' diberi izin' : ' — ' + res.msg);
-      if (!res.ok) line.className = 'pl err';
-      log.appendChild(line); log.scrollTop = log.scrollHeight;
-      if (res.ok) ok++; else fail++;
-      prog.value = (i + 1) / list.length;
-      if (res.status === 429){ log.appendChild(mk('div', 'pl err', 'Berhenti: Roblox membatasi permintaan. Coba lagi nanti untuk sisanya.')); break; }
-      if (res.status === 401){ break; }
-      await wait(700);
+    var ok = 0, fail = 0, stop = false;
+    function add(txt, bad){ log.appendChild(mk('div', 'pl' + (bad ? ' err' : ''), txt)); log.scrollTop = log.scrollHeight; prog.value = Math.min(1, (ok + fail) / all.length); }
+    async function runChunk(chunk){
+      var r;
+      try { r = await grantBatch(chunk, a.k); } catch(e){ r = { ok: false, status: 0, j: null, raw: '', msg: 'Tidak bisa menghubungi Roblox.' }; }
+      if (!r.ok){
+        if (chunk.length > 1 && r.status === 400){
+          for (var q = 0; q < chunk.length && !stop; q++){ await runChunk([chunk[q]]); await wait(500); }
+          return;
+        }
+        var m = r.status ? errText({ status: r.status }, r.j, r.raw) : r.msg;
+        chunk.forEach(function(id){ add('✗ ' + id + ' — ' + m, true); fail++; });
+        if (r.status === 429){ add('Berhenti: Roblox membatasi permintaan. Coba lagi nanti untuk sisanya.', true); stop = true; }
+        if (r.status === 401) stop = true;
+        return;
+      }
+      chunk.forEach(function(id){
+        if (r.okSet[id]){ ok++; add('✓ ' + id + ' diberi izin'); }
+        else { fail++; add('✗ ' + id + ' — ' + (r.errBy[id] || r.general || 'Tidak ada di daftar berhasil. Balasan: ' + String(r.raw).slice(0, 120)), true); }
+      });
+    }
+    for (var i = 0; i < all.length && !stop; i += CHUNK){
+      await runChunk(all.slice(i, i + CHUNK));
+      if (i + CHUNK < all.length) await wait(700);
     }
     log.appendChild(mk('div', 'pl', 'Selesai: ' + ok + ' berhasil, ' + fail + ' gagal.'));
     busy = false; prog.hidden = true; ready();
