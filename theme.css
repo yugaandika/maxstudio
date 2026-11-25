@@ -132,3 +132,18 @@ html::before{
   100%{transform:translate3d(5%,-3%,0) rotate(-5deg) scale(1.02)}
 }
 @media (prefers-reduced-motion:reduce){html::before{animation:none!important}}
+
+/* ===== Tab menu dan Asset Permission ===== */
+.tabs{display:flex;gap:8px;margin:14px 0 0}
+.tabs .chip{flex:1;text-align:center}
+#permpane{display:none}
+#app[data-tab="perm"] #permpane{display:grid}
+#app[data-tab="perm"] .step:not(#permpane){display:none}
+@media (min-width:900px){#permpane{grid-column:1/-1;grid-row:3}}
+.permta{width:100%;min-height:130px;resize:vertical;font:500 .85rem var(--mono);line-height:1.5}
+.plog{max-height:260px;overflow-y:auto;display:grid;gap:4px;font:500 .8rem var(--mono)}
+.plog:empty{display:none}
+.plog .pl{color:var(--acc);overflow-wrap:anywhere}
+.plog .pl.err{color:#ff6b6b}
+:root[data-theme="light"] .plog .pl{color:var(--acc-text)}
+:root[data-theme="light"] .plog .pl.err{color:#c62828}
