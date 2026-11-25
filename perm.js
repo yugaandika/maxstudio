@@ -44,11 +44,13 @@
     type = t; tgt = null; tin.value = ''; showChip(); say($('pnote'), ''); say($('pconn'), '');
     $('pt-user').setAttribute('aria-pressed', t === 'user' ? 'true' : 'false');
     $('pt-group').setAttribute('aria-pressed', t === 'group' ? 'true' : 'false');
-    tin.placeholder = t === 'user' ? 'Ketik username Roblox' : 'Ketik Group ID (angka)';
+    $('pt-uni').setAttribute('aria-pressed', t === 'universe' ? 'true' : 'false');
+    tin.placeholder = { user: 'Ketik username Roblox', group: 'Ketik Group ID (angka)', universe: 'Ketik Universe ID experience (angka)' }[t];
     ready();
   }
   $('pt-user').onclick = function(){ setType('user'); };
   $('pt-group').onclick = function(){ setType('group'); };
+  $('pt-uni').onclick = function(){ setType('universe'); };
   function showChip(){
     chip.textContent = ''; if (!tgt){ chip.hidden = true; return; }
     var av = mk('span', 'av', tgt.name.charAt(0)), tx = mk('div', 'atx');
@@ -69,6 +71,9 @@
         var u = o.j && o.j.data && o.j.data[0];
         if (!o.r.ok || !u){ say($('pnote'), o.r.ok ? 'Username tidak ditemukan.' : 'Pencarian ditolak (kode ' + o.r.status + '). Coba lagi sebentar.', true); return; }
         tgt = { id: String(u.id), name: u.name, sub: u.displayName && u.displayName !== u.name ? u.displayName : '' };
+      } else if (type === 'universe'){
+        if (!/^\d+$/.test(v)){ say($('pnote'), 'Universe ID harus angka.', true); return; }
+        tgt = { id: v, name: 'Experience ' + v, sub: 'Experience' };
       } else {
         if (!/^\d+$/.test(v)){ say($('pnote'), 'Group ID harus angka.', true); return; }
         var g = await jget('lookup/group/' + v);
@@ -86,7 +91,7 @@
   var ctok = 0;
   async function recheck(){
     var a = cur(), st = $('pconn'), tk = ++ctok;
-    if (!tgt || !a){ say(st, ''); return; }
+    if (!tgt || !a || type === 'universe'){ say(st, ''); return; }
     say(st, 'Mengecek koneksi...');
     try {
       if (type === 'user'){
@@ -126,7 +131,7 @@
     return { r: r, j: j, t: t };
   }
   /* Roblox menolak "User" sebagai SubjectType, jadi beberapa penulisan dicoba otomatis. Yang berhasil diingat. */
-  var VAR = { user: ['User', 'USER', 'user', 'SUBJECT_TYPE_USER'], group: ['Group', 'GROUP', 'group', 'SUBJECT_TYPE_GROUP'] };
+  var VAR = { user: ['User', 'USER', 'user', 'SUBJECT_TYPE_USER'], group: ['Group', 'GROUP', 'group', 'SUBJECT_TYPE_GROUP'], universe: ['Universe', 'UNIVERSE', 'universe', 'SUBJECT_TYPE_UNIVERSE'] };
   var okVar = {};
   async function grant(assetId, key){
     var list = okVar[type] ? [okVar[type]] : VAR[type], o = null, tried = [], good = false;
@@ -139,7 +144,7 @@
       if (o.r.ok && !bad){ good = true; okVar[type] = list[i]; break; }
       if (!(o.r.status === 400 && /subjecttype/i.test(o.t || ''))) break;
     }
-    return { ok: good, status: o.r.status, msg: good ? '' : errText(o.r, o.j, o.t) + (tried.length > 1 ? ' (dicoba: ' + tried.join(', ') + ')' : '') };
+    return { ok: good, status: o.r.status, msg: good ? '' : errText(o.r, o.j, o.t) + (tried.length > 1 ? ' (dicoba: ' + tried.join(', ') + ')' : '') + (o.r.status === 400 ? ' [balasan: ' + String(o.t || '').slice(0, 220) + ']' : '') };
   }
   $('pgo').onclick = async function(){
     var a = cur(), list = ids(), log = $('plog'), prog = $('pprog');
