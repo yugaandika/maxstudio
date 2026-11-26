@@ -130,7 +130,7 @@
     var t = await r.text(), j = null; try { j = JSON.parse(t); } catch(e){}
     return { r: r, j: j, t: t };
   }
-  /* Bentuk permintaan yang diterima Roblox (hasil Diagnosa): satu permintaan berisi banyak assetIds. */
+  /* Bentuk permintaan yang diterima Roblox: satu permintaan berisi banyak assetIds. */
   var CHUNK = 20;
   async function grantBatch(list, key){
     var st = { user: 'User', group: 'Group', universe: 'Universe' }[type];
@@ -176,37 +176,6 @@
     }
     log.appendChild(mk('div', 'pl', 'Selesai: ' + ok + ' berhasil, ' + fail + ' gagal.'));
     busy = false; prog.hidden = true; ready();
-  };
-
-  /* Diagnosa: mencoba beberapa bentuk permintaan ke Roblox dengan ID audio pertama, lalu menampilkan balasan tiap percobaan. */
-  $('pdiag').onclick = async function(){
-    var a = cur(), list = ids(), log = $('plog');
-    log.textContent = '';
-    if (busy || !a || !tgt || !list.length){ log.appendChild(mk('div', 'pl err', 'Pilih akun, cari tujuan, dan isi satu ID audio dulu.')); return; }
-    busy = true; ready();
-    var id = list[0], st = { user: 'User', group: 'Group', universe: 'Universe' }[type], sid = tgt.id, ac = PERM.action;
-    var combos = [
-      ['PATCH', PERM.path, { assetIds: [id], subjectType: st, subjectId: sid, action: ac }, 'assetIds + subject'],
-      ['PATCH', PERM.path, { assetIds: [id], subjectType: st, subjectId: sid }, 'assetIds tanpa action'],
-      ['PATCH', PERM.path, { assetIds: [Number(id)], subjectType: st, subjectId: Number(sid), action: ac }, 'assetIds angka'],
-      ['PATCH', PERM.path, { assetIds: [id], subjectType: st.toLowerCase(), subjectId: sid, action: ac }, 'assetIds huruf kecil'],
-      ['PATCH', PERM.path, { assetIds: [id], requests: [{ subjectType: st, subjectId: sid, action: ac }] }, 'assetIds + requests'],
-      ['PATCH', PERM.path, { assetIds: [id], requests: [{ subjectType: st, subjectId: sid }] }, 'assetIds + requests tanpa action'],
-      ['PATCH', PERM.path, { assetIds: [id], subjects: [{ subjectType: st, subjectId: sid }], action: ac }, 'assetIds + subjects'],
-      ['PATCH', PERM.path, { assetIds: [id], subject: { subjectType: st, subjectId: sid }, action: ac }, 'assetIds + subject bersarang']
-    ];
-    for (var k = 0; k < combos.length; k++){
-      var c = combos[k], line = mk('div', 'pl'), r, t;
-      try {
-        r = await fetch(API + c[1], { method: c[0], headers: { 'Content-Type': 'application/json', 'x-api-key': a.k }, body: JSON.stringify(c[2]) });
-        t = await r.text();
-        line.textContent = (r.ok ? '✓ ' : '• ') + '#' + (k + 1) + ' ' + c[3] + ' → ' + r.status + ' ' + t.slice(0, 150);
-        if (!r.ok) line.className = 'pl err';
-      } catch(e){ line.textContent = '• #' + (k + 1) + ' ' + c[3] + ' → gagal terhubung'; line.className = 'pl err'; }
-      log.appendChild(line); await wait(800);
-    }
-    log.appendChild(mk('div', 'pl', 'Diagnosa selesai.'));
-    busy = false; ready();
   };
 
   renderAcc(); ready();
