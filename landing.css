@@ -1,20 +1,140 @@
-/* Halaman pembuka, bar pengguna, dan pengatur tampilan login */
+/* Halaman pembuka (landing), bar pengguna, dan pengatur tampilan login */
 #landing{display:none}
 body.s-landing #landing{display:block}
 body.s-landing #app{display:none}
 body.boot #landing,body.boot #app{visibility:hidden}
-#landing{max-width:680px;margin:0 auto}
-.how{display:grid;gap:12px;margin:22px 0 0;padding:0;list-style:none}
-.how li{border:1px solid var(--line);border-radius:18px;background:#080808;padding:16px 18px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 14px;align-items:start}
-.how .idx{grid-row:span 2}
-.how b{letter-spacing:.1em;text-transform:uppercase;font-size:.88rem}
-.how span:not(.idx){color:var(--mut);font-size:.9rem}
-.pitch{margin:18px 0 0;border:1px solid var(--acc-line);border-radius:18px;padding:16px 18px;background:#050f09;display:grid;gap:6px}
-.pitch b{color:var(--acc);letter-spacing:.1em;text-transform:uppercase;font-size:.82rem}
-.pitch p{margin:0;color:var(--mut);font-size:.9rem}
-.cta{display:grid;gap:10px;margin:22px 0 0}
+
+#landing{max-width:1120px;margin:0 auto;--l-card:#070b09;--l-card2:#0b120e;--l-edge:rgba(61,220,132,.3);--l-glow:rgba(61,220,132,.2);--l-tint:rgba(61,220,132,.05);--l-ink:var(--acc)}
+:root[data-theme="light"] #landing{--l-card:#ffffff;--l-card2:#f2f9f5;--l-edge:rgba(18,161,80,.38);--l-glow:rgba(18,161,80,.18);--l-tint:rgba(18,161,80,.06);--l-ink:var(--acc-text,var(--acc))}
+
+/* bar atas */
+.l-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#landing .brandrow{gap:12px}
+#landing .logo{width:48px}
+#landing .brand{font-size:clamp(1.3rem,5.4vw,1.85rem);gap:8px}
+.l-theme{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:4px 14px;font-size:.78rem}
+.l-theme svg{display:block;width:16px;height:16px;flex:none}
+.l-theme .i-moon,.l-theme .t-dark{display:none}
+:root[data-theme="light"] .l-theme .i-sun,:root[data-theme="light"] .l-theme .t-light{display:none}
+:root[data-theme="light"] .l-theme .i-moon{display:block}
+:root[data-theme="light"] .l-theme .t-dark{display:inline}
+
+/* hero */
+.l-hero{display:grid;gap:30px;margin-top:28px;align-items:center}
+.l-kicker{display:inline-flex;font:600 .72rem var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--l-ink);border:1px solid var(--acc-line);border-radius:999px;padding:5px 12px;background:var(--l-tint)}
+#landing .l-title{display:block;margin:14px 0 0;font:800 clamp(1.9rem,7.4vw,3.15rem)/1.08 var(--sans);letter-spacing:-.01em;color:var(--fg)}
+#landing .l-title::after{content:none}
+.l-grad{background:linear-gradient(90deg,var(--acc),#7dffb4);-webkit-background-clip:text;background-clip:text;color:transparent}
+:root[data-theme="light"] .l-grad{background:linear-gradient(90deg,#0b7a43,#18b55c);-webkit-background-clip:text;background-clip:text}
+#landing .lede{margin-top:14px}
+#landing .tags{margin-top:16px}
+.l-copy .cta{margin-top:22px}
+.cta{display:grid;gap:10px}
 .cta .btn{width:100%;text-align:center}
 .fine{margin:14px 0 0;color:var(--dim);font-size:.78rem}
+
+/* ilustrasi hero: jendela aplikasi palsu dari CSS dan SVG */
+.l-art{position:relative;padding:16px 2px 30px}
+.l-win{border:1px solid var(--l-edge);border-radius:22px;background:linear-gradient(180deg,var(--l-card2),var(--l-card));box-shadow:0 34px 80px -40px var(--l-glow);padding:14px;display:grid;gap:12px;animation:rise .6s cubic-bezier(.2,.7,.2,1) both}
+.l-win-bar{display:flex;align-items:center;gap:6px;font:500 .7rem var(--mono);color:var(--mut)}
+.l-win-bar i{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.l-win-bar i:nth-child(1){background:#ff6b6b}
+.l-win-bar i:nth-child(2){background:#f5c542}
+.l-win-bar i:nth-child(3){background:var(--acc)}
+.l-win-bar span{margin-left:8px}
+.l-wave{border:1px solid var(--acc-line);border-radius:14px;padding:10px 12px;background:var(--l-tint)}
+.l-wave svg{display:block;width:100%;height:60px}
+.wv-on,.wv-off{fill:none;stroke-width:6;stroke-linecap:round}
+.wv-on{stroke:var(--acc)}
+.wv-off{stroke:var(--line)}
+.l-win .readout{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.l-win .cell{padding:10px 12px}
+.l-win .big{font-size:clamp(1.45rem,5vw,1.9rem)}
+.l-win .label,.l-win .sub{font-size:.68rem}
+.l-sl{height:6px;border-radius:99px;background:var(--line);position:relative;margin:4px 8px 2px 0}
+.l-sl span{position:absolute;left:0;top:0;bottom:0;width:58%;border-radius:99px;background:var(--acc)}
+.l-sl span::after{content:"";position:absolute;right:-8px;top:50%;width:16px;height:16px;margin-top:-8px;border-radius:50%;background:var(--bg);border:3px solid var(--acc)}
+.l-chips{display:flex;flex-wrap:wrap;gap:8px}
+.l-chips .chip{min-height:30px;padding:3px 12px;font-size:.78rem;cursor:default}
+.l-float{position:absolute;font:600 .72rem var(--mono);letter-spacing:.04em;padding:7px 12px;border-radius:999px;border:1px solid var(--acc-line);background:var(--l-card);color:var(--l-ink);box-shadow:0 12px 30px -12px var(--l-glow);white-space:nowrap}
+.l-float.f1{right:2px;bottom:2px}
+.l-float.f2{left:2px;top:0}
+
+/* judul bagian */
+.l-h{display:flex;align-items:center;gap:14px;margin:56px 0 0;font:800 clamp(1.3rem,4.6vw,1.85rem)/1.15 var(--sans);letter-spacing:-.005em;color:var(--fg)}
+.l-h::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--acc-line),transparent)}
+.l-sub{margin:8px 0 0;color:var(--mut);max-width:60ch}
+
+/* kartu fitur */
+.l-feats{display:grid;gap:18px;margin-top:22px}
+.l-card{border:1px solid var(--l-edge);border-radius:22px;background:linear-gradient(180deg,var(--l-card2),var(--l-card));padding:16px;display:grid;gap:16px;align-content:start;box-shadow:0 30px 70px -48px var(--l-glow);animation:rise .55s cubic-bezier(.2,.7,.2,1) both}
+.l-card:nth-child(2){animation-delay:.08s}
+.l-card-art{border:1px solid var(--line);border-radius:16px;padding:14px;background:var(--l-tint);display:grid;gap:10px;align-content:center;min-height:170px}
+.l-head{display:flex;align-items:center;gap:12px}
+.l-head h3{margin:2px 0 0;font:800 1.25rem/1.2 var(--sans);color:var(--fg)}
+.l-pill{font:600 .68rem var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--l-ink)}
+.l-card p{margin:12px 0 0;color:var(--mut);font-size:.92rem}
+.l-ico{flex:none;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;border:1px solid var(--acc-line);background:var(--l-tint);color:var(--l-ink)}
+.l-ico svg{width:22px;height:22px}
+.l-list{margin:12px 0 0;padding:0;list-style:none;display:grid;gap:8px}
+.l-list li{position:relative;padding-left:24px;font-size:.9rem;color:var(--fg)}
+.l-list li::before{content:"";position:absolute;left:2px;top:.38em;width:11px;height:6px;border-left:2px solid var(--acc);border-bottom:2px solid var(--acc);transform:rotate(-45deg)}
+.l-formula{display:flex;align-items:center;justify-content:center;gap:12px;font:500 1.05rem var(--mono);color:var(--mut)}
+.l-formula .chip{min-height:30px;padding:3px 12px;cursor:default}
+.l-formula .n{color:var(--fg)}
+.l-formula i{font-style:normal}
+.l-formula b{color:var(--l-ink);font-weight:600}
+.l-input{display:flex;align-items:center;justify-content:space-between;gap:10px;font:500 .8rem var(--mono);color:var(--fg);border:1px solid var(--acc-line);border-radius:12px;padding:9px 12px;background:var(--l-card)}
+.l-input b{font-weight:600;font-size:.68rem;letter-spacing:.05em;color:var(--l-ink)}
+.l-row{display:flex;align-items:center;gap:10px;font:500 .78rem var(--mono);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--l-card)}
+.l-row span{color:var(--l-ink);font-weight:700}
+.l-row b{margin-left:auto;font-weight:600;font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;color:var(--l-ink)}
+.l-row.bad{border-color:rgba(255,107,107,.5)}
+.l-row.bad span,.l-row.bad b{color:#ff6b6b}
+:root[data-theme="light"] .l-row.bad span,:root[data-theme="light"] .l-row.bad b{color:#d92d3a}
+
+/* langkah */
+.l-steps{display:grid;gap:14px;margin:22px 0 0;padding:0;list-style:none}
+.l-steps li{position:relative;border:1px solid var(--line);border-radius:18px;background:var(--l-card);padding:18px;display:grid;gap:8px;align-content:start}
+.l-steps b{letter-spacing:.1em;text-transform:uppercase;font-size:.86rem;margin-top:4px}
+.l-steps .t{color:var(--mut);font-size:.9rem}
+.l-num{position:absolute;top:16px;right:18px;font:600 .75rem var(--mono);color:var(--dim)}
+
+/* ajakan login */
+.l-pitch{margin-top:46px;border:1px solid var(--acc-line);border-radius:24px;padding:22px;background:linear-gradient(135deg,var(--l-card2),var(--l-card));display:grid;gap:18px;box-shadow:0 30px 80px -50px var(--l-glow)}
+.l-pitch h2{margin:0;font:800 clamp(1.15rem,4vw,1.5rem)/1.2 var(--sans);color:var(--fg)}
+.l-pitch p{margin:8px 0 0;color:var(--mut);font-size:.92rem}
+
+/* perbaikan: kotak Roblox di tema terang, logo footer */
+:root[data-theme="light"] .l-win .cell.rbx{background:#0f2a1c;border-color:#0f2a1c}
+:root[data-theme="light"] .l-win .cell.rbx .label,:root[data-theme="light"] .l-win .cell.rbx .sub{color:#9fe8bf}
+:root[data-theme="light"] .l-win .cell.rbx .big{color:#ffffff}
+#landing .foot .logo{width:34px}
+#landing .foot{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;text-align:center}
+
+/* desktop */
+@media (min-width:900px){
+  #landing .logo{width:56px}
+  .l-hero{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:48px;margin-top:44px}
+  .l-copy .cta{grid-template-columns:auto auto;justify-content:start}
+  .l-copy .cta .btn,.l-pitch .cta .btn{width:auto}
+  .l-art{padding:24px 10px 36px}
+  .l-win{padding:18px;gap:14px;transform:rotate(-1.2deg)}
+  .l-wave svg{height:78px}
+  .l-float.f1{right:-6px;bottom:6px}
+  .l-float.f2{left:-6px;top:6px}
+  .l-feats{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+  .l-card{padding:20px}
+  .l-steps{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+  .l-pitch{grid-template-columns:minmax(0,1.3fr) auto;align-items:center;gap:32px;padding:30px 34px}
+}
+@media (min-width:900px) and (hover:hover) and (pointer:fine){
+  .l-float{animation:lfloat 6s ease-in-out infinite alternate}
+  .l-float.f2{animation-delay:-3s}
+}
+@keyframes lfloat{from{transform:translateY(0)}to{transform:translateY(-8px)}}
+@media (max-width:380px){.l-theme{padding:4px 10px;gap:6px}#landing .brand{font-size:1.15rem}#landing .logo{width:42px}.l-formula{gap:8px;font-size:.95rem}.l-float{font-size:.66rem;padding:6px 10px}}
+
 .userbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end;font-size:.82rem;color:var(--mut)}
 .userbar:empty{display:none}
 .userbar img{width:28px;height:28px;border-radius:50%}
